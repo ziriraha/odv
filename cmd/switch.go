@@ -5,17 +5,14 @@ import (
 	"log"
 	"sync"
 
-	"github.com/go-git/go-git/v5"
 	"github.com/spf13/cobra"
 	"github.com/ziriraha/odoodev/internal"
 )
 
-func findBranch(repository *git.Repository, branchName string) string {
-	_, err := repository.Branch(branchName)
-	if err != nil {
+func findBranch(repository *internal.Repository, branchName string) string {
+	if !repository.BranchExists(branchName) {
 		version := internal.DetectVersion(branchName)
-		_, err := repository.Branch(version)
-		if err != nil {
+		if !repository.BranchExists(version) {
 			return "master"
 		}
 		return version
@@ -30,17 +27,17 @@ var switchCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
 		var wg sync.WaitGroup
-		for name, repository := range internal.GetRepositories() {
+		for _, repository := range internal.GetRepositories() {
 			wg.Add(1)
-			go func(name string, repository *git.Repository) {
+			go func(repository *internal.Repository) {
 				defer wg.Done()
 				branchName := findBranch(repository, args[0])
-				fmt.Printf("Switching %v to branch %v\n", name, branchName)
-				err := internal.SwitchBranch(repository, branchName)
+				fmt.Printf("Switching %v to branch %v\n", repository.Name, branchName)
+				err := repository.SwitchBranch(branchName)
 				if err != nil {
-					log.Fatal(fmt.Errorf("switching to branch %v in repository %v: %w", branchName, name, err))
+					log.Fatal(fmt.Errorf("switching to branch %v in repository %v: %w", branchName, repository.Name, err))
 				}
-			}(name, repository)
+			}(&repository)
 		}
 		wg.Wait()
     },

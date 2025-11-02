@@ -1,12 +1,7 @@
 package internal
 
 import (
-	"fmt"
-	"log"
-	"sync"
-
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
+	"os/exec"
 )
 
 var RepositoryPaths = map[string]string{
@@ -15,31 +10,34 @@ var RepositoryPaths = map[string]string{
 		"upgrade":    "./upgrade",
 	}
 
-var (
-	repositories     map[string]*git.Repository
-	repositoriesOnce sync.Once
-)
+type Repository struct {
+	Name string
+	Path string
+}
 
-func GetRepositories() (map[string]*git.Repository) {
-	repositoriesOnce.Do(func() {
-		repositories = make(map[string]*git.Repository, len(RepositoryPaths))
-		for name, path := range RepositoryPaths {
-			repository, err := git.PlainOpen(path)
-			if err != nil {
-				log.Fatal(fmt.Errorf("opening repository %v in path %v: %v", name, path, err))
-			}
-			repositories[name] = repository
+func GetRepositories() [3]Repository {
+	var repositories [3]Repository
+	i := 0
+	for name, path := range RepositoryPaths {
+		repositories[i] = Repository{
+			Name: name,
+			Path: path,
 		}
-	})
+		i++
+	}
 	return repositories
 }
 
-func SwitchBranch(repository *git.Repository, branchName string) error {
-	worktree, err := repository.Worktree()
+func (r *Repository) BranchExists(branchName string) (bool) {
+	cmd := exec.Command("git", "-C", r.Path, "branch", "--list", branchName)
+	output, err := cmd.Output()
 	if err != nil {
-		return err
+		return false
 	}
-	return worktree.Checkout(&git.CheckoutOptions{
-		Branch: plumbing.NewBranchReferenceName(branchName),
-	})
+	return len(output) > 0
+}
+
+func (r *Repository) SwitchBranch(branchName string) error {
+	cmd := exec.Command("git", "-C", r.Path, "switch", branchName)
+	return cmd.Run()
 }
