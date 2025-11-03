@@ -30,8 +30,7 @@ func (r *Repository) GetBranches() ([]string, error) {
 	if r.branches != nil {
 		return r.branches, nil
 	}
-	cmd := exec.Command("git", "-C", r.Path, "branch")
-	output, err := cmd.Output()
+	output, err := exec.Command("git", "-C", r.Path, "branch").Output()
 	if err != nil {
 		return nil, err
 	}
@@ -46,8 +45,7 @@ func (r *Repository) GetBranches() ([]string, error) {
 }
 
 func (r *Repository) BranchExists(branchName string) (bool) {
-	cmd := exec.Command("git", "-C", r.Path, "branch", "--list", branchName)
-	output, err := cmd.Output()
+	output, err := exec.Command("git", "-C", r.Path, "branch", "--list", branchName).Output()
 	if err != nil {
 		return false
 	}
@@ -55,6 +53,5 @@ func (r *Repository) BranchExists(branchName string) (bool) {
 }
 
 func (r *Repository) SwitchBranch(branchName string) error {
-	cmd := exec.Command("git", "-C", r.Path, "switch", branchName)
-	return cmd.Run()
+	return exec.Command("git", "-C", r.Path, "switch", branchName).Run()
 }
