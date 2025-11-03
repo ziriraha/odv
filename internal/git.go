@@ -55,3 +55,20 @@ func (r *Repository) BranchExists(branchName string) (bool) {
 func (r *Repository) SwitchBranch(branchName string) error {
 	return exec.Command("git", "-C", r.Path, "switch", branchName).Run()
 }
+
+func (r *Repository) GetCurrentBranch() (string, error) {
+	output, err := exec.Command("git", "-C", r.Path, "branch", "--show-current").Output()
+	return strings.TrimSpace(string(output)), err
+}
+
+func (r *Repository) Fetch(branch string) error {
+	remote := "dev"
+	if isVersionBranch(branch) {
+		remote = "origin"
+	}
+	return exec.Command("git", "-C", r.Path, "fetch", remote, branch).Run()
+}
+
+func (r *Repository) Pull() error {
+	return exec.Command("git", "-C", r.Path, "pull", "--ff-only").Run()
+}

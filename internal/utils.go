@@ -31,6 +31,10 @@ func DetectVersion(branch string) string {
 	return strings.SplitN(branch, "-", 1)[0]
 }
 
+func isVersionBranch(branch string) bool {
+	return branch == DetectVersion(branch)
+}
+
 func ForEachRepository(action func(repo *Repository) error) error {
 	var wg sync.WaitGroup
 	for _, repository := range GetRepositories() {
