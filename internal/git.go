@@ -2,23 +2,25 @@ package internal
 
 import (
 	"os/exec"
+	"sync"
 )
 
+var repositories []Repository
 type Repository struct {
 	Name string
 	Path string
 }
 
-func GetRepositories() [3]Repository {
-	var repositories [3]Repository
-	i := 0
-	for name, path := range RepositoryPaths {
-		repositories[i] = Repository{
-			Name: name,
-			Path: path,
+var repositoriesOnce sync.Once
+func GetRepositories() []Repository {
+	repositoriesOnce.Do(func() {
+		for name, path := range RepositoryPaths {
+			repositories = append(repositories, Repository{
+				Name: name,
+				Path: path,
+			})
 		}
-		i++
-	}
+	})
 	return repositories
 }
 

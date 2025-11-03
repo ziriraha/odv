@@ -1,8 +1,11 @@
 package internal
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"strings"
+	"sync"
 )
 
 var RepositoryPaths = map[string]string{
@@ -26,4 +29,20 @@ func DetectVersion(branch string) string {
 		return "saas-" + strings.SplitN(branch[5:], "-", 1)[0]
 	}
 	return strings.SplitN(branch, "-", 1)[0]
+}
+
+func ForEachRepository(action func(repo *Repository) error) error {
+	var wg sync.WaitGroup
+	for _, repository := range GetRepositories() {
+		wg.Add(1)
+		go func(repo *Repository) {
+			defer wg.Done()
+			err := action(repo)
+			if err != nil {
+				log.Fatal(fmt.Errorf("in repository %v: %w", repo.Name, err))
+			}
+		}(&repository)
+	}
+	wg.Wait()
+	return nil
 }
