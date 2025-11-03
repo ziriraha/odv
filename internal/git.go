@@ -4,12 +4,6 @@ import (
 	"os/exec"
 )
 
-var RepositoryPaths = map[string]string{
-		"community":  "./community",
-		"enterprise": "./enterprise",
-		"upgrade":    "./upgrade",
-	}
-
 type Repository struct {
 	Name string
 	Path string
