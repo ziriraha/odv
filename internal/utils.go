@@ -31,18 +31,25 @@ func isVersionBranch(branch string) bool {
 	return branch == DetectVersion(branch)
 }
 
-func ForEachRepository(action func(repo *Repository) error) error {
+func ForEachRepository(action func(repo *Repository) error, isConcurrent bool) error {
 	var wg sync.WaitGroup
 	for i := range Repositories {
-		wg.Add(1)
 		repo := &Repositories[i]
-		go func(r *Repository) {
-			defer wg.Done()
-			err := action(r)
+		if isConcurrent {
+			wg.Add(1)
+			go func(r *Repository) {
+				defer wg.Done()
+				err := action(r)
+				if err != nil {
+					log.Fatal(fmt.Errorf("in repository %v: %w", r.Color(r.Name), err))
+				}
+			}(repo)
+		} else {
+			err := action(repo)
 			if err != nil {
-				log.Fatal(fmt.Errorf("in repository %v: %w", r.Color(r.Name), err))
+				log.Fatal(fmt.Errorf("in repository %v: %w", repo.Color(repo.Name), err))
 			}
-		}(repo)
+		}
 	}
 	wg.Wait()
 	return nil

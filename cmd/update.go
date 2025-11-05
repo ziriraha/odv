@@ -26,7 +26,7 @@ var updateCmd = &cobra.Command{
 				return fmt.Errorf("pulling branch %v: %w", curBranch, err)
 			}
 			return nil
-		})
+		}, true)
 	},
 }
 

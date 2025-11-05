@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"sync"
 
 	"github.com/spf13/cobra"
 	"github.com/ziriraha/odoodev/internal"
@@ -25,7 +24,7 @@ var listCmd = &cobra.Command{
 			}
 			branches[repository] = branchList
 			return nil
-		})
+		}, true)
 		sort.Strings(letters)
 		// Print the list in the following format:
 		// ceu - branch -> this branch is present in community, enterprise and upgrade
@@ -73,14 +72,11 @@ var listCmd = &cobra.Command{
 		})
 		for _, branch := range sortedBranches {
 			// Colorize presence
-			var presenceLock sync.Mutex
 			internal.ForEachRepository(func (r *internal.Repository) error {
-				presenceLock.Lock()
-				defer presenceLock.Unlock()
 				letter := r.Name[0:1]
 				branch.presence = strings.ReplaceAll(branch.presence, letter, r.Color(letter))
 				return nil
-			})
+			}, false)
 			fmt.Printf("%s - %s\n", branch.presence, branch.name)
 		}
 	},

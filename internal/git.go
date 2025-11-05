@@ -2,6 +2,7 @@ package internal
 
 import (
 	"os/exec"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -11,15 +12,18 @@ type Repository struct {
 	lock sync.Mutex
 	Name string
 	Path string
-	Color func(format string, a ...interface{}) string
+	Color func(format string, a ...any) string
 	branches []string
 }
 
-func AddRepository(name, path string, color func(format string, a ...interface{}) string) {
+func AddRepository(name, path string, color func(format string, a ...any) string) {
 	Repositories = append(Repositories, Repository{
 		Name: name,
 		Path: path,
 		Color: color,
+	})
+	sort.Slice(Repositories, func(i, j int) bool {
+		return Repositories[i].Name < Repositories[j].Name
 	})
 }
 

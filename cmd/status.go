@@ -19,7 +19,7 @@ var statusCmd = &cobra.Command{
 			}
 			fmt.Printf("%v: %v\n", repository.Color(repository.Name), curBranch)
 			return nil
-		})
+		}, false)
 	},
 }
 

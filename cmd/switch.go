@@ -32,7 +32,7 @@ var switchCmd = &cobra.Command{
 				return fmt.Errorf("switching to branch %v: %w", branchName, err)
 			}
 			return nil
-		})
+		}, true)
 	},
 }
 
