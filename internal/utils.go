@@ -37,15 +37,17 @@ func isVersionBranch(branch string) bool {
 
 func ForEachRepository(action func(repo *Repository) error) error {
 	var wg sync.WaitGroup
-	for _, repository := range GetRepositories() {
+	repositories := GetRepositories()
+	for i := range repositories {
 		wg.Add(1)
-		go func(repo *Repository) {
+		repo := &repositories[i]
+		go func(r *Repository) {
 			defer wg.Done()
-			err := action(repo)
+			err := action(r)
 			if err != nil {
-				log.Fatal(fmt.Errorf("in repository %v: %w", repo.Name, err))
+				log.Fatal(fmt.Errorf("in repository %v: %w", r.Name, err))
 			}
-		}(&repository)
+		}(repo)
 	}
 	wg.Wait()
 	return nil

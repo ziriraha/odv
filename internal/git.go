@@ -8,6 +8,7 @@ import (
 
 var repositories []Repository
 type Repository struct {
+	lock sync.Mutex
 	Name string
 	Path string
 	branches []string
@@ -26,11 +27,18 @@ func GetRepositories() []Repository {
 	return repositories
 }
 
+func (r *Repository) runCommand(args ...string) (string, error) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	output, err := exec.Command("git", append([]string{"-C", r.Path}, args...)...).Output()
+	return string(output), err
+}
+
 func (r *Repository) GetBranches() ([]string, error) {
 	if r.branches != nil {
 		return r.branches, nil
 	}
-	output, err := exec.Command("git", "-C", r.Path, "branch").Output()
+	output, err := r.runCommand("branch")
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +53,7 @@ func (r *Repository) GetBranches() ([]string, error) {
 }
 
 func (r *Repository) BranchExists(branchName string) (bool) {
-	output, err := exec.Command("git", "-C", r.Path, "branch", "--list", branchName).Output()
+	output, err := r.runCommand("branch", "--list", branchName)
 	if err != nil {
 		return false
 	}
@@ -53,11 +61,12 @@ func (r *Repository) BranchExists(branchName string) (bool) {
 }
 
 func (r *Repository) SwitchBranch(branchName string) error {
-	return exec.Command("git", "-C", r.Path, "switch", branchName).Run()
+	_, err := r.runCommand("switch", branchName)
+	return err
 }
 
 func (r *Repository) GetCurrentBranch() (string, error) {
-	output, err := exec.Command("git", "-C", r.Path, "branch", "--show-current").Output()
+	output, err := r.runCommand("branch", "--show-current")
 	return strings.TrimSpace(string(output)), err
 }
 
@@ -66,9 +75,11 @@ func (r *Repository) Fetch(branch string) error {
 	if isVersionBranch(branch) {
 		remote = "origin"
 	}
-	return exec.Command("git", "-C", r.Path, "fetch", remote, branch).Run()
+	_, err := r.runCommand("fetch", remote, branch)
+	return err
 }
 
 func (r *Repository) Pull() error {
-	return exec.Command("git", "-C", r.Path, "pull", "--ff-only").Run()
+	_, err := r.runCommand("pull", "--ff-only")
+	return err
 }
