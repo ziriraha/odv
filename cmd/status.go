@@ -17,7 +17,7 @@ var statusCmd = &cobra.Command{
 			if err != nil {
 				return fmt.Errorf("getting current branch: %w", err)
 			}
-			fmt.Printf("%v: %v\n", repository.Name, curBranch)
+			fmt.Printf("%v: %v\n", repository.Color(repository.Name), curBranch)
 			return nil
 		})
 	},

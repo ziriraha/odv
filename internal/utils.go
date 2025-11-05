@@ -40,7 +40,7 @@ func ForEachRepository(action func(repo *Repository) error) error {
 			defer wg.Done()
 			err := action(r)
 			if err != nil {
-				log.Fatal(fmt.Errorf("in repository %v: %w", r.Name, err))
+				log.Fatal(fmt.Errorf("in repository %v: %w", r.Color(r.Name), err))
 			}
 		}(repo)
 	}
