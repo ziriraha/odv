@@ -6,22 +6,18 @@ import (
 	"os"
 	"strings"
 	"sync"
-)
 
-var RepositoryPaths = map[string]string{
-		"community":  "/community",
-		"enterprise": "/enterprise",
-		"upgrade":    "/upgrade",
-	}
+	"github.com/fatih/color"
+)
 
 func InitializeConfiguration() {
 	odooHome := os.Getenv("ODOO_HOME")
 	if len(odooHome) == 0 {
 		odooHome = "."
 	}
-	for name := range RepositoryPaths {
-		RepositoryPaths[name] = odooHome + RepositoryPaths[name]
-	}
+	AddRepository("community", odooHome + "/community", color.YellowString)
+	AddRepository("enterprise", odooHome + "/enterprise", color.GreenString)
+	AddRepository("upgrade", odooHome + "/upgrade", color.BlueString)
 }
 
 func DetectVersion(branch string) string {
@@ -37,10 +33,9 @@ func isVersionBranch(branch string) bool {
 
 func ForEachRepository(action func(repo *Repository) error) error {
 	var wg sync.WaitGroup
-	repositories := GetRepositories()
-	for i := range repositories {
+	for i := range Repositories {
 		wg.Add(1)
-		repo := &repositories[i]
+		repo := &Repositories[i]
 		go func(r *Repository) {
 			defer wg.Done()
 			err := action(r)

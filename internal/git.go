@@ -6,25 +6,21 @@ import (
 	"sync"
 )
 
-var repositories []Repository
+var Repositories []Repository
 type Repository struct {
 	lock sync.Mutex
 	Name string
 	Path string
+	Color func(format string, a ...interface{}) string
 	branches []string
 }
 
-var repositoriesOnce sync.Once
-func GetRepositories() []Repository {
-	repositoriesOnce.Do(func() {
-		for name, path := range RepositoryPaths {
-			repositories = append(repositories, Repository{
-				Name: name,
-				Path: path,
-			})
-		}
+func AddRepository(name, path string, color func(format string, a ...interface{}) string) {
+	Repositories = append(Repositories, Repository{
+		Name: name,
+		Path: path,
+		Color: color,
 	})
-	return repositories
 }
 
 func (r *Repository) runCommand(args ...string) (string, error) {
