@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/spf13/cobra"
 	"github.com/ziriraha/odoodev/internal"
@@ -22,13 +23,16 @@ var listCmd = &cobra.Command{
     Run: func(cmd *cobra.Command, args []string) {
 		branches := make(map[*internal.Repository][]string)
 		letters := make([]string, 0, len(internal.Repositories))
+		var mapLock sync.Mutex
 		internal.ForEachRepository(func (repository *internal.Repository) error {
 			branchList, err := repository.GetBranches()
 			letters = append(letters, repository.Name[0:1])
 			if err != nil {
 				return fmt.Errorf("getting branches: %w", err)
 			}
+			mapLock.Lock()
 			branches[repository] = branchList
+			mapLock.Unlock()
 			return nil
 		}, true)
 		sort.Strings(letters)
