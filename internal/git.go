@@ -25,6 +25,7 @@ func AddRepository(name, path string, color func(format string, a ...any) string
 	sort.Slice(Repositories, func(i, j int) bool {
 		return Repositories[i].Name < Repositories[j].Name
 	})
+	Debug.Printf("Added repository: '%v' at '%v'", name, path)
 }
 
 func (r *Repository) runCommand(args ...string) (string, error) {
@@ -55,6 +56,7 @@ func (r *Repository) GetBranches() ([]string, error) {
 func (r *Repository) BranchExists(branchName string) (bool) {
 	output, err := r.runCommand("branch", "--list", branchName)
 	if err != nil {
+		Debug.Printf("BranchExists error: %v", err)
 		return false
 	}
 	return len(output) > 0

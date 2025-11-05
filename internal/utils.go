@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -10,11 +11,28 @@ import (
 	"github.com/fatih/color"
 )
 
+var Error = log.Logger{}
+var Debug = log.Logger{}
+
+func SetupLoggers(debug bool) {
+	Error.SetFlags(0)
+	Error.SetPrefix(color.RedString("ERROR "))
+	Error.SetOutput(os.Stderr)
+
+	Debug.SetFlags(0)
+	Debug.SetPrefix(color.BlueString("DEBUG "))
+	Debug.SetOutput(os.Stderr)
+	if !debug {
+		Debug.SetOutput(io.Discard)
+	}
+}
+
 func InitializeConfiguration() {
 	odooHome := os.Getenv("ODOO_HOME")
 	if len(odooHome) == 0 {
 		odooHome = "."
 	}
+	Debug.Printf("Configuration's Odoo Home: '%v'", odooHome)
 	AddRepository("community", odooHome + "/community", color.YellowString)
 	AddRepository("enterprise", odooHome + "/enterprise", color.GreenString)
 	AddRepository("upgrade", odooHome + "/upgrade", color.BlueString)
@@ -41,13 +59,13 @@ func ForEachRepository(action func(repo *Repository) error, isConcurrent bool) e
 				defer wg.Done()
 				err := action(r)
 				if err != nil {
-					log.Fatal(fmt.Errorf("in repository %v: %w", r.Color(r.Name), err))
+					Error.Fatal(fmt.Errorf("in repository %v: %w", r.Color(r.Name), err))
 				}
 			}(repo)
 		} else {
 			err := action(repo)
 			if err != nil {
-				log.Fatal(fmt.Errorf("in repository %v: %w", repo.Color(repo.Name), err))
+				Error.Fatal(fmt.Errorf("in repository %v: %w", repo.Color(repo.Name), err))
 			}
 		}
 	}

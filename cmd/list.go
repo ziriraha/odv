@@ -9,6 +9,12 @@ import (
 	"github.com/ziriraha/odoodev/internal"
 )
 
+// Print the list in the following format:
+// ceu - branch -> this branch is present in community, enterprise and upgrade
+// c u - branch -> this branch is present in community and upgrade
+//  e   - branch -> this branch is present in enterprise only
+// Sort the output branches by most present to least present and then alphabetically
+
 var listCmd = &cobra.Command{
     Use:   "list",
     Short: "List all branches in the repositories.",
@@ -26,10 +32,7 @@ var listCmd = &cobra.Command{
 			return nil
 		}, true)
 		sort.Strings(letters)
-		// Print the list in the following format:
-		// ceu - branch -> this branch is present in community, enterprise and upgrade
-		// c u - branch -> this branch is present in community and upgrade
-		//  e   - branch -> this branch is present in enterprise only
+
 		branchPresence := make(map[string]string)
 		for repo, branchList := range branches {
 			for _, branch := range branchList {
@@ -38,7 +41,7 @@ var listCmd = &cobra.Command{
 					presence = strings.Repeat(" ", len(branches))
 				}
 				letter := repo.Name[0:1]
-				// place the letter in alphabetical order of repository initials
+
 				if pos := sort.SearchStrings(letters, letter); pos == 0 {
 					presence = letter + presence[1:]
 				} else if pos == len(letters)-1 {
@@ -50,7 +53,6 @@ var listCmd = &cobra.Command{
 			}
 		}
 
-		// Sort the branches by most present to least present and then alphabetically
 		type branchInfo struct {
 			name     string
 			presence string
@@ -71,7 +73,6 @@ var listCmd = &cobra.Command{
 			return sortedBranches[i].name < sortedBranches[j].name
 		})
 		for _, branch := range sortedBranches {
-			// Colorize presence
 			internal.ForEachRepository(func (r *internal.Repository) error {
 				letter := r.Name[0:1]
 				branch.presence = strings.ReplaceAll(branch.presence, letter, r.Color(letter))

@@ -10,7 +10,9 @@ import (
 func findBranch(repository *internal.Repository, branchName string) string {
 	if !repository.BranchExists(branchName) {
 		version := internal.DetectVersion(branchName)
+		internal.Debug.Printf("findBranch: '%v', '%v', detected version: '%v'", repository.Name, branchName, version)
 		if !repository.BranchExists(version) {
+			internal.Debug.Printf("findBranch: '%v', '%v', detected version '%v' does not exist, using 'master'", repository.Name, branchName, version)
 			return "master"
 		}
 		return version
@@ -26,10 +28,10 @@ var switchCmd = &cobra.Command{
     Run: func(cmd *cobra.Command, args []string) {
 		internal.ForEachRepository(func (repository *internal.Repository) error {
 			branchName := findBranch(repository, args[0])
-			fmt.Printf("Switching %v to branch %v\n", repository.Color(repository.Name), branchName)
+			fmt.Printf("Switching '%v' to branch '%v'\n", repository.Color(repository.Name), branchName)
 			err := repository.SwitchBranch(branchName)
 			if err != nil {
-				return fmt.Errorf("switching to branch %v: %w", branchName, err)
+				return fmt.Errorf("switching to branch '%v': %w", branchName, err)
 			}
 			return nil
 		}, true)
