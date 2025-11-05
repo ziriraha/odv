@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/ziriraha/odoodev/internal"
 )
@@ -15,34 +15,37 @@ var listCmd = &cobra.Command{
     Short: "List all branches in the repositories.",
     Long:  "Will list all branches in the specified odoo repositories.",
     Run: func(cmd *cobra.Command, args []string) {
-		branches := make(map[string][]string)
+		branches := make(map[*internal.Repository][]string)
+		letters := make([]string, 0, len(internal.Repositories))
 		internal.ForEachRepository(func (repository *internal.Repository) error {
 			branchList, err := repository.GetBranches()
+			letters = append(letters, repository.Name[0:1])
 			if err != nil {
 				return fmt.Errorf("getting branches: %w", err)
 			}
-			branches[repository.Name] = branchList
+			branches[repository] = branchList
 			return nil
 		})
-
+		sort.Strings(letters)
 		// Print the list in the following format:
 		// ceu - branch -> this branch is present in community, enterprise and upgrade
 		// c u - branch -> this branch is present in community and upgrade
 		//  e   - branch -> this branch is present in enterprise only
 		branchPresence := make(map[string]string)
-		for repoName, branchList := range branches {
+		for repo, branchList := range branches {
 			for _, branch := range branchList {
 				presence, ok := branchPresence[branch]
 				if !ok {
-					presence = "   "
+					presence = strings.Repeat(" ", len(branches))
 				}
-				switch repoName {
-				case "community":
-					presence = "c" + presence[1:]
-				case "enterprise":
-					presence = presence[:1] + "e" + presence[2:]
-				case "upgrade":
-					presence = presence[:2] + "u"
+				letter := repo.Name[0:1]
+				// place the letter in alphabetical order of repository initials
+				if pos := sort.SearchStrings(letters, letter); pos == 0 {
+					presence = letter + presence[1:]
+				} else if pos == len(letters)-1 {
+					presence = presence[:pos] + letter
+				} else {
+					presence = presence[:pos] + letter + presence[pos+1:]
 				}
 				branchPresence[branch] = presence
 			}
@@ -70,9 +73,14 @@ var listCmd = &cobra.Command{
 		})
 		for _, branch := range sortedBranches {
 			// Colorize presence
-			branch.presence = strings.ReplaceAll(branch.presence, "c", color.GreenString("c"))
-			branch.presence = strings.ReplaceAll(branch.presence, "e", color.YellowString("e"))
-			branch.presence = strings.ReplaceAll(branch.presence, "u", color.CyanString("u"))
+			var presenceLock sync.Mutex
+			internal.ForEachRepository(func (r *internal.Repository) error {
+				presenceLock.Lock()
+				defer presenceLock.Unlock()
+				letter := r.Name[0:1]
+				branch.presence = strings.ReplaceAll(branch.presence, letter, r.Color(letter))
+				return nil
+			})
 			fmt.Printf("%s - %s\n", branch.presence, branch.name)
 		}
 	},
