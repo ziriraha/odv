@@ -40,9 +40,13 @@ func InitializeConfiguration() {
 
 func DetectVersion(branch string) string {
 	if strings.HasPrefix(branch, "saas-") {
-		return "saas-" + strings.SplitN(branch[5:], "-", 1)[0]
+		version := strings.SplitN(branch[5:], "-", 2)[0]
+		Debug.Printf("DetectVersion: detected saas branch '%v', splitting gives this '%v'", branch, "saas-" + version)
+		return "saas-" + version
 	}
-	return strings.SplitN(branch, "-", 1)[0]
+	version := strings.SplitN(branch, "-", 2)[0]
+	Debug.Printf("DetectVersion: detected regular branch '%v', splitting gives this '%v'", branch, version)
+	return version
 }
 
 func isVersionBranch(branch string) bool {
