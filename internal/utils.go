@@ -28,6 +28,7 @@ func InitializeConfiguration() {
 		odooHome = "."
 	}
 	Debug.Printf("Configuration's Odoo Home: '%v'", odooHome)
+	AddRepository(".vscode", odooHome + "/.vscode", color.RedString, "main")
 	AddRepository("community", odooHome + "/community", color.YellowString, "master")
 	AddRepository("enterprise", odooHome + "/enterprise", color.GreenString, "master")
 	AddRepository("upgrade", odooHome + "/upgrade", color.BlueString, "master")
