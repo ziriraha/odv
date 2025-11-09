@@ -14,7 +14,6 @@ import (
 // ceu - branch -> this branch is present in community, enterprise and upgrade
 // c u - branch -> this branch is present in community and upgrade
 //  e   - branch -> this branch is present in enterprise only
-// Sort the output branches by most present to least present and then alphabetically
 
 var listCmd = &cobra.Command{
     Use:   "list",
@@ -56,14 +55,7 @@ var listCmd = &cobra.Command{
 		for branch, presence := range branchPresence {
 			sortedBranches = append(sortedBranches, branchInfo{ name: branch, presence: presence })
 		}
-		sort.Slice(sortedBranches, func(i, j int) bool {
-			iLen := len(strings.TrimSpace(sortedBranches[i].presence))
-			jLen := len(strings.TrimSpace(sortedBranches[j].presence))
-			if iLen != jLen {
-				return iLen > jLen
-			}
-			return sortedBranches[i].name < sortedBranches[j].name
-		})
+		sort.Slice(sortedBranches, func(i, j int) bool { return sortedBranches[i].name < sortedBranches[j].name })
 		for _, branch := range sortedBranches {
 			internal.ForEachRepository(func (r *internal.Repository) {
 				letter := r.Name[0:1]
