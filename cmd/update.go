@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/ziriraha/odoodev/internal"
 )
@@ -12,20 +10,17 @@ var updateCmd = &cobra.Command{
     Short: "Update current branch.",
 	Long: "Will fetch and pull (ff-only) the current branch in all three odoo repositories.",
     Run: func(cmd *cobra.Command, args []string) {
-		internal.ForEachRepository(func (repository *internal.Repository) error {
+		internal.ForEachRepository(func (repository *internal.Repository) {
 			curBranch, err := repository.GetCurrentBranch()
-			if err != nil {
-				return fmt.Errorf("getting current branch: %w", err)
+			if err != nil { internal.Error.Printf("in repository %v: getting current branch: %v", repository.Name, err)
+			} else {
+				err = repository.Fetch(curBranch)
+				if err != nil { internal.Error.Printf("in repository %v: fetching branch %v: %v", repository.Name, curBranch, err)
+				} else {
+					err = repository.Pull()
+					if err != nil { internal.Error.Printf("in repository %v: pulling branch %v: %v", repository.Name, curBranch, err) }
+				}
 			}
-			err = repository.Fetch(curBranch)
-			if err != nil {
-				return fmt.Errorf("fetching branch %v: %w", curBranch, err)
-			}
-			err = repository.Pull()
-			if err != nil {
-				return fmt.Errorf("pulling branch %v: %w", curBranch, err)
-			}
-			return nil
 		}, true)
 	},
 }

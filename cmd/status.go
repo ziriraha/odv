@@ -12,13 +12,13 @@ var statusCmd = &cobra.Command{
     Short: "Prints current branch.",
 	Long: "Will print the current branch in all three odoo repositories.",
     Run: func(cmd *cobra.Command, args []string) {
-		internal.ForEachRepository(func (repository *internal.Repository) error {
+		internal.ForEachRepository(func (repository *internal.Repository) {
 			curBranch, err := repository.GetCurrentBranch()
 			if err != nil {
-				return fmt.Errorf("getting current branch: %w", err)
+				internal.Error.Printf("in repository %v: getting current branch: %v", repository.Name, err)
+			} else {
+				fmt.Printf("%v: %v\n", repository.Color(repository.Name), curBranch)
 			}
-			fmt.Printf("%v: %v\n", repository.Color(repository.Name), curBranch)
-			return nil
 		}, false)
 	},
 }

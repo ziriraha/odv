@@ -1,18 +1,15 @@
 package internal
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/fatih/color"
 )
 
-var Error = log.Logger{}
-var Debug = log.Logger{}
+var Error, Debug = log.Logger{}, log.Logger{}
 
 func SetupLoggers(debug bool) {
 	Error.SetFlags(0)
@@ -22,9 +19,7 @@ func SetupLoggers(debug bool) {
 	Debug.SetFlags(0)
 	Debug.SetPrefix(color.BlueString("DEBUG "))
 	Debug.SetOutput(os.Stderr)
-	if !debug {
-		Debug.SetOutput(io.Discard)
-	}
+	if !debug { Debug.SetOutput(io.Discard) }
 }
 
 func InitializeConfiguration() {
@@ -38,22 +33,7 @@ func InitializeConfiguration() {
 	AddRepository("upgrade", odooHome + "/upgrade", color.BlueString)
 }
 
-func DetectVersion(branch string) string {
-	if strings.HasPrefix(branch, "saas-") {
-		version := strings.SplitN(branch[5:], "-", 2)[0]
-		Debug.Printf("DetectVersion: detected saas branch '%v', splitting gives this '%v'", branch, "saas-" + version)
-		return "saas-" + version
-	}
-	version := strings.SplitN(branch, "-", 2)[0]
-	Debug.Printf("DetectVersion: detected regular branch '%v', splitting gives this '%v'", branch, version)
-	return version
-}
-
-func isVersionBranch(branch string) bool {
-	return branch == DetectVersion(branch)
-}
-
-func ForEachRepository(action func(repo *Repository) error, isConcurrent bool) error {
+func ForEachRepository(action func(repo *Repository), isConcurrent bool) {
 	var wg sync.WaitGroup
 	for i := range Repositories {
 		repo := &Repositories[i]
@@ -61,18 +41,9 @@ func ForEachRepository(action func(repo *Repository) error, isConcurrent bool) e
 			wg.Add(1)
 			go func(r *Repository) {
 				defer wg.Done()
-				err := action(r)
-				if err != nil {
-					Error.Fatal(fmt.Errorf("in repository %v: %w", r.Color(r.Name), err))
-				}
+				action(r)
 			}(repo)
-		} else {
-			err := action(repo)
-			if err != nil {
-				Error.Fatal(fmt.Errorf("in repository %v: %w", repo.Color(repo.Name), err))
-			}
-		}
+		} else { action(repo) }
 	}
 	wg.Wait()
-	return nil
 }

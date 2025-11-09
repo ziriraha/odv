@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"os/exec"
 	"sort"
 	"strings"
@@ -22,9 +23,7 @@ func AddRepository(name, path string, color func(format string, a ...any) string
 		Path: path,
 		Color: color,
 	})
-	sort.Slice(Repositories, func(i, j int) bool {
-		return Repositories[i].Name < Repositories[j].Name
-	})
+	sort.Slice(Repositories, func(i, j int) bool { return Repositories[i].Name < Repositories[j].Name })
 	Debug.Printf("Added repository: '%v' at '%v'", name, path)
 }
 
@@ -32,25 +31,23 @@ func (r *Repository) runCommand(args ...string) (string, error) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	output, err := exec.Command("git", append([]string{"-C", r.Path}, args...)...).Output()
+	if err != nil { err = fmt.Errorf("%w: %v", err, string(output)) }
 	return string(output), err
 }
 
-func (r *Repository) GetBranches() ([]string, error) {
-	if r.branches != nil {
-		return r.branches, nil
-	}
+func (r *Repository) GetBranches() ([]string) {
+	if r.branches != nil { return r.branches }
 	output, err := r.runCommand("branch")
 	if err != nil {
-		return nil, err
+		Debug.Printf("GetBranches error: %v", err)
+		return nil
 	}
 	for _, line := range strings.Split(string(output), "\n") {
 		line = strings.TrimSpace(line)
 		line = strings.TrimPrefix(line, "* ")
-		if line != "" {
-			r.branches = append(r.branches, line)
-		}
+		if line != "" { r.branches = append(r.branches, line) }
 	}
-	return r.branches, nil
+	return r.branches
 }
 
 func (r *Repository) BranchExists(branchName string) (bool) {
@@ -74,9 +71,7 @@ func (r *Repository) GetCurrentBranch() (string, error) {
 
 func (r *Repository) Fetch(branch string) error {
 	remote := "dev"
-	if isVersionBranch(branch) {
-		remote = "origin"
-	}
+	if isVersionBranch(branch) { remote = "origin" }
 	_, err := r.runCommand("fetch", remote, branch)
 	return err
 }

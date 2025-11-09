@@ -23,7 +23,5 @@ func init() {
 
 func Execute() {
 	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
-	}
+	if err != nil { os.Exit(1) }
 }

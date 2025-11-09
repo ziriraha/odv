@@ -1,9 +1,5 @@
 package main
 
-import (
-	"github.com/ziriraha/odoodev/cmd"
-)
+import "github.com/ziriraha/odoodev/cmd"
 
-func main() {
-	cmd.Execute()
-}
+func main() { cmd.Execute() }
