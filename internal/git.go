@@ -11,17 +11,21 @@ import (
 var Repositories []Repository
 type Repository struct {
 	lock sync.Mutex
+
 	Name string
-	Path string
+	path string
 	Color func(format string, a ...any) string
+
 	branches []string
+	DefaultBranch string
 }
 
-func AddRepository(name, path string, color func(format string, a ...any) string) {
+func AddRepository(name, path string, color func(format string, a ...any) string, defaultBranch string) {
 	Repositories = append(Repositories, Repository{
 		Name: name,
-		Path: path,
+		path: path,
 		Color: color,
+		DefaultBranch: defaultBranch,
 	})
 	sort.Slice(Repositories, func(i, j int) bool { return Repositories[i].Name < Repositories[j].Name })
 	Debug.Printf("Added repository: '%v' at '%v'", name, path)
@@ -30,7 +34,7 @@ func AddRepository(name, path string, color func(format string, a ...any) string
 func (r *Repository) runCommand(args ...string) (string, error) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	output, err := exec.Command("git", append([]string{"-C", r.Path}, args...)...).Output()
+	output, err := exec.Command("git", append([]string{"-C", r.path}, args...)...).Output()
 	if err != nil { err = fmt.Errorf("%w: %v", err, string(output)) }
 	return string(output), err
 }

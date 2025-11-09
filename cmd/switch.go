@@ -12,8 +12,8 @@ func findBranch(repository *internal.Repository, branchName string) string {
 		version := internal.DetectVersion(branchName)
 		internal.Debug.Printf("findBranch: '%v', '%v', detected version: '%v'", repository.Name, branchName, version)
 		if !repository.BranchExists(version) {
-			internal.Debug.Printf("findBranch: '%v', '%v', detected version '%v' does not exist, using 'master'", repository.Name, branchName, version)
-			return "master"
+			internal.Debug.Printf("findBranch: '%v', '%v', detected version '%v' does not exist, using '%v'", repository.Name, branchName, version, repository.DefaultBranch)
+			return repository.DefaultBranch
 		}
 		return version
 	}

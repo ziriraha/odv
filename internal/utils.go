@@ -28,9 +28,9 @@ func InitializeConfiguration() {
 		odooHome = "."
 	}
 	Debug.Printf("Configuration's Odoo Home: '%v'", odooHome)
-	AddRepository("community", odooHome + "/community", color.YellowString)
-	AddRepository("enterprise", odooHome + "/enterprise", color.GreenString)
-	AddRepository("upgrade", odooHome + "/upgrade", color.BlueString)
+	AddRepository("community", odooHome + "/community", color.YellowString, "master")
+	AddRepository("enterprise", odooHome + "/enterprise", color.GreenString, "master")
+	AddRepository("upgrade", odooHome + "/upgrade", color.BlueString, "master")
 }
 
 func ForEachRepository(action func(repo *Repository), isConcurrent bool) {
