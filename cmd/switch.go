@@ -26,7 +26,7 @@ var switchCmd = &cobra.Command{
 	Long: "Will switch all three odoo repositories to the specified branch or version.",
 	Args: cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
-		internal.ForEachRepository(func (repository *internal.Repository) {
+		internal.ForEachRepository(func (i int, repository *internal.Repository) {
 			branchName := findBranch(repository, args[0])
 			fmt.Printf("Switching '%v' to branch '%v'\n", repository.Color(repository.Name), branchName)
 			err := repository.SwitchBranch(branchName)

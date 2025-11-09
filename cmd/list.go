@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 	"strings"
 	"sync"
 
@@ -13,7 +14,7 @@ import (
 // Print the list in the following format:
 // ceu - branch -> this branch is present in community, enterprise and upgrade
 // c u - branch -> this branch is present in community and upgrade
-//  e   - branch -> this branch is present in enterprise only
+//  e  - branch -> this branch is present in enterprise only
 
 var listCmd = &cobra.Command{
     Use:   "list",
@@ -21,47 +22,33 @@ var listCmd = &cobra.Command{
     Short: "List all branches in the repositories.",
     Long:  "Will list all branches in the specified odoo repositories.",
     Run: func(cmd *cobra.Command, args []string) {
-		branches := make(map[string][]string, len(internal.Repositories))
-		letters := make([]string, 0, len(internal.Repositories))
-		var mapLock sync.Mutex
-		internal.ForEachRepository(func (repository *internal.Repository) {
-			branchList := repository.GetBranches()
-			mapLock.Lock()
-			letters = append(letters, repository.Name[0:1])
-			branches[repository.Name] = branchList
-			mapLock.Unlock()
+		var branches sync.Map
+		internal.ForEachRepository(func (i int, repository *internal.Repository) {
+			branches.Store(repository.Name, repository.GetBranches())
 		}, true)
 
-		branchPresence := make(map[string]string, len(branches))
-		sort.Strings(letters)
-		internal.ForEachRepository(func (repository *internal.Repository) {
-			for _, branch := range branches[repository.Name] {
+		branchPresence := make(map[string]string)
+		internal.ForEachRepository(func (i int, repository *internal.Repository) {
+			branchList, _ := branches.Load(repository.Name)
+			letter := repository.Name[0:1]
+			for _, branch := range branchList.([]string) {
 				presence, ok := branchPresence[branch]
-				if !ok { presence = strings.Repeat(" ", len(letters)) }
-				letter := repository.Name[0:1]
-				if pos := sort.SearchStrings(letters, letter); pos == 0 {
-					presence = letter + presence[1:]
-				} else if pos == len(letters)-1 {
-					presence = presence[:pos] + letter
-				} else {
-					presence = presence[:pos] + letter + presence[pos+1:]
-				}
+				if !ok { presence = strings.Repeat(" ", len(internal.Repositories)) }
+				presence = presence[:i] + letter + presence[i+1:]
 				branchPresence[branch] = presence
 			}
 		}, false)
 
-		type branchInfo struct { name, presence string }
-		sortedBranches := make([]branchInfo, 0, len(branchPresence))
-		for branch, presence := range branchPresence {
-			sortedBranches = append(sortedBranches, branchInfo{ name: branch, presence: presence })
-		}
-		sort.Slice(sortedBranches, func(i, j int) bool { return sortedBranches[i].name < sortedBranches[j].name })
-		for _, branch := range sortedBranches {
-			internal.ForEachRepository(func (r *internal.Repository) {
-				letter := r.Name[0:1]
-				branch.presence = strings.ReplaceAll(branch.presence, letter, r.Color(letter))
-			}, false)
-			fmt.Printf("%s - %s\n", branch.presence, branch.name)
+		internal.ForEachRepository(func (i int, repository *internal.Repository) {
+			letter := repository.Name[0:1]
+			colorizedLetter := repository.Color(letter)
+			for branch := range branchPresence {
+				branchPresence[branch] = strings.ReplaceAll(branchPresence[branch], letter, colorizedLetter)
+			}
+		}, false)
+
+		for _, branch := range slices.Sorted(maps.Keys(branchPresence)) {
+			fmt.Printf("%s - %s\n", branchPresence[branch], branch)
 		}
 	},
 }

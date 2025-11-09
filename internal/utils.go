@@ -33,17 +33,17 @@ func InitializeConfiguration() {
 	AddRepository("upgrade", odooHome + "/upgrade", color.BlueString, "master")
 }
 
-func ForEachRepository(action func(repo *Repository), isConcurrent bool) {
+func ForEachRepository(action func(i int,repo *Repository), isConcurrent bool) {
 	var wg sync.WaitGroup
 	for i := range Repositories {
 		repo := &Repositories[i]
 		if isConcurrent {
 			wg.Add(1)
-			go func(r *Repository) {
+			go func(i int, r *Repository) {
 				defer wg.Done()
-				action(r)
-			}(repo)
-		} else { action(repo) }
+				action(i, r)
+			}(i, repo)
+		} else { action(i, repo) }
 	}
 	wg.Wait()
 }

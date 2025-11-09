@@ -10,7 +10,7 @@ var updateCmd = &cobra.Command{
     Short: "Update current branch.",
 	Long: "Will fetch and pull (ff-only) the current branch in all three odoo repositories.",
     Run: func(cmd *cobra.Command, args []string) {
-		internal.ForEachRepository(func (repository *internal.Repository) {
+		internal.ForEachRepository(func (i int, repository *internal.Repository) {
 			curBranch, err := repository.GetCurrentBranch()
 			if err != nil { internal.Error.Printf("in repository %v: getting current branch: %v", repository.Name, err)
 			} else {
