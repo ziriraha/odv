@@ -1,4 +1,4 @@
-module github.com/ziriraha/odoodev
+module github.com/ziriraha/odv
 
 go 1.25.3
 

@@ -1,5 +1,5 @@
 package main
 
-import "github.com/ziriraha/odoodev/cmd"
+import "github.com/ziriraha/odv/cmd"
 
 func main() { cmd.Execute() }

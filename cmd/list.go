@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/ziriraha/odoodev/internal"
+	"github.com/ziriraha/odv/internal"
 )
 
 // Print the list in the following format:

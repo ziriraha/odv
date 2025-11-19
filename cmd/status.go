@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/ziriraha/odoodev/internal"
+	"github.com/ziriraha/odv/internal"
 )
 
 var statusCmd = &cobra.Command{
