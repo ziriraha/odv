@@ -3,32 +3,18 @@ package internal
 import (
 	"fmt"
 	"os/exec"
-	"sort"
 	"strings"
 	"sync"
 )
 
-var Repositories []Repository
 type Repository struct {
 	lock sync.Mutex
 
-	Name string
 	path string
 	Color func(format string, a ...any) string
 
 	branches []string
 	DefaultBranch string
-}
-
-func AddRepository(name, path string, color func(format string, a ...any) string, defaultBranch string) {
-	Repositories = append(Repositories, Repository{
-		Name: name,
-		path: path,
-		Color: color,
-		DefaultBranch: defaultBranch,
-	})
-	sort.Slice(Repositories, func(i, j int) bool { return Repositories[i].Name < Repositories[j].Name })
-	Debug.Printf("Added repository: '%v' at '%v'", name, path)
 }
 
 func (r *Repository) runCommand(args ...string) (string, error) {

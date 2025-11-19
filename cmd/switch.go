@@ -7,30 +7,25 @@ import (
 	"github.com/ziriraha/odv/internal"
 )
 
-func findBranch(repository *internal.Repository, branchName string) string {
-	if !repository.BranchExists(branchName) {
-		version := internal.DetectVersion(branchName)
-		internal.Debug.Printf("findBranch: '%v', '%v', detected version: '%v'", repository.Name, branchName, version)
-		if !repository.BranchExists(version) {
-			internal.Debug.Printf("findBranch: '%v', '%v', detected version '%v' does not exist, using '%v'", repository.Name, branchName, version, repository.DefaultBranch)
-			return repository.DefaultBranch
-		}
-		return version
-	}
-	return branchName
-}
-
 var switchCmd = &cobra.Command{
     Use:   "switch <branch>",
     Short: "Switch to an existing branch.",
 	Long: "Will switch all three odoo repositories to the specified branch or version.",
 	Args: cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
-		internal.ForEachRepository(func (i int, repository *internal.Repository) {
-			branchName := findBranch(repository, args[0])
-			fmt.Printf("Switching '%v' to branch '%v'\n", repository.Color(repository.Name), branchName)
+		version := internal.DetectVersion(args[0])
+		internal.Debug.Printf("switchCmd: version '%v' was detected", version)
+		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
+			branchName := args[0]
+			if !repository.BranchExists(branchName) {
+				branchName = version
+				if !repository.BranchExists(branchName) { branchName = repository.DefaultBranch }
+			}
+			fmt.Printf("Switching '%v' to branch '%v'\n", repository.Color(repoName), branchName)
 			err := repository.SwitchBranch(branchName)
-			if err != nil { internal.Error.Printf("in repository %v: switching to branch '%v': %v", repository.Name, branchName, err) }
+			if err != nil { 
+				internal.Error.Printf("in repository %v: switching to branch '%v': %v", repoName, branchName, err) 
+			}
 		}, true)
 	},
 }
