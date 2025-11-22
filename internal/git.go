@@ -59,6 +59,28 @@ func (r *Repository) GetCurrentBranch() (string, error) {
 	return strings.TrimSpace(string(output)), err
 }
 
+func (r *Repository) GetStatus() ([]string, error) {
+	output, err := r.runCommand("status", "--porcelain")
+	if err != nil { return nil, err }
+	var changes []string
+	for _, line := range strings.Split(string(output), "\n") {
+		line = strings.TrimRight(line, " \t\n\r")
+		if line != "" { changes = append(changes, line) }
+	}
+	return changes, nil
+}
+
+func (r *Repository) GetAheadBehindInfo(branch string) (ahead int, behind int, err error) {
+	remote := "dev"
+	if isVersionBranch(branch) { remote = "origin" }
+	output, err := r.runCommand("rev-list", "--left-right", "--count", fmt.Sprintf("%s...%s/%s", branch, remote, branch))
+	if err != nil { return 0, 0, err }
+	parts := strings.Fields(strings.TrimSpace(string(output)))
+	fmt.Sscanf(parts[0], "%d", &ahead)
+	fmt.Sscanf(parts[1], "%d", &behind)
+	return ahead, behind, nil
+}
+
 func (r *Repository) Fetch(branch string) error {
 	remote := "dev"
 	if isVersionBranch(branch) { remote = "origin" }

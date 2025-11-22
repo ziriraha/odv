@@ -12,6 +12,10 @@ import (
 	"github.com/fatih/color"
 )
 
+func GrayString(format string, a ...any) string {
+	return color.New(color.FgBlack, color.FgWhite).Sprintf(format, a...)
+}
+
 var Error, Debug = log.Logger{}, log.Logger{}
 func SetupLoggers(debug bool) {
 	Error.SetFlags(0)
