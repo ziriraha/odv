@@ -53,9 +53,10 @@ func (r *Repository) SwitchBranch(branchName string) error {
 	return err
 }
 
-func (r *Repository) GetCurrentBranch() (string, error) {
+func (r *Repository) GetCurrentBranch() (string) {
 	output, err := r.runCommand("branch", "--show-current")
-	return strings.TrimSpace(output), err
+	if err != nil { panic(fmt.Errorf("GetCurrentBranch error: %v", err)) }
+	return strings.TrimSpace(output)
 }
 
 func (r *Repository) GetStatus() ([]string, error) {

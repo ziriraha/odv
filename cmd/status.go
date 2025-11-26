@@ -43,11 +43,7 @@ var statusCmd = &cobra.Command{
     Run: func(cmd *cobra.Command, args []string) {
 		var statuses sync.Map
 		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
-			curBranch, err := repository.GetCurrentBranch()
-			if err != nil {
-				internal.Error.Printf("in repository %v: getting current branch: %v", repoName, err)
-				return
-			}
+			curBranch := repository.GetCurrentBranch()
 			ahead, behind, err := repository.GetAheadBehindInfo(curBranch)
 			if err != nil {
 				internal.Debug.Printf("in repository %v: error getting ahead/behind info probably due to no upstream branch: %v", repoName, err)

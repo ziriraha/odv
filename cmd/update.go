@@ -12,11 +12,7 @@ var updateCmd = &cobra.Command{
     Run: func(cmd *cobra.Command, args []string) {
 		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
 			if repoName == ".vscode" { return }
-			curBranch, err := repository.GetCurrentBranch()
-			if err != nil {
-				internal.Error.Printf("in repository %v: getting current branch: %v", repoName, err)
-				return
-			}
+			curBranch := repository.GetCurrentBranch()
 			if !internal.IsVersionBranch(curBranch) {
 				internal.Debug.Printf("in repository %v: current branch %v is not a version branch, skipping update", repoName, curBranch)
 				return
