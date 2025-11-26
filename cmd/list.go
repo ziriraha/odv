@@ -47,7 +47,15 @@ var listCmd = &cobra.Command{
 			}
 		}, false)
 
-		for _, branch := range slices.Sorted(maps.Keys(branchPresence)) {
+		sortedBranches := slices.SortedFunc(maps.Keys(branchPresence), func(a, b string) int {
+			aVersion := internal.GetVersion(a)
+			bVersion := internal.GetVersion(b)
+			comparison := strings.Compare(aVersion, bVersion)
+			if comparison != 0 { return -comparison
+			} else { return strings.Compare(a, b) }
+		})
+
+		for _, branch := range sortedBranches {
 			fmt.Printf("%s - %s\n", branchPresence[branch], branch)
 		}
 	},
