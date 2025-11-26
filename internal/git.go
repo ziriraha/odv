@@ -7,6 +7,8 @@ import (
 	"sync"
 )
 
+var FallbackBranch = "master"
+
 type Repository struct {
 	lock sync.Mutex
 
@@ -14,7 +16,6 @@ type Repository struct {
 	Color func(format string, a ...any) string
 
 	branches []string
-	DefaultBranch string
 }
 
 func (r *Repository) runCommand(args ...string) (string, error) {

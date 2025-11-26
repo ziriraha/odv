@@ -21,7 +21,7 @@ var switchCmd = &cobra.Command{
 			branchName := args[0]
 			if !repository.BranchExists(branchName) {
 				branchName = version
-				if !repository.BranchExists(branchName) { branchName = repository.DefaultBranch }
+				if !repository.BranchExists(branchName) { branchName = internal.FallbackBranch }
 			}
 			repoBranch.Store(repoName, branchName)
 		}, true)
