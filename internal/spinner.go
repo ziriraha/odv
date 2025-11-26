@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/muesli/reflow/truncate"
 	"golang.org/x/term"
 )
@@ -43,6 +44,12 @@ func (m *MultiSpinner) Add(text string) *LineSpinner {
     ls := &LineSpinner{ text: text, line: len(m.spinners) }
     m.spinners = append(m.spinners, ls)
     return ls
+}
+
+func (m *MultiSpinner) UpdateText(ls *LineSpinner, text string) {
+	m.mu.Lock()
+	ls.text = text
+	m.mu.Unlock()
 }
 
 func (m *MultiSpinner) print(frame int) {
@@ -88,6 +95,20 @@ func (m *MultiSpinner) Stop(ls *LineSpinner, message string) {
     ls.done = true
     ls.result = message
     m.mu.Unlock()
+}
+
+func (m *MultiSpinner) Done(ls *LineSpinner) {
+	m.mu.Lock()
+	ls.done = true
+	ls.result = color.New(color.FgGreen, color.Bold).Sprint("✓")
+	m.mu.Unlock()
+}
+
+func (m *MultiSpinner) Fail(ls *LineSpinner) {
+	m.mu.Lock()
+	ls.done = true
+	ls.result = color.New(color.FgRed, color.Bold).Sprint("✗")
+	m.mu.Unlock()
 }
 
 func (m *MultiSpinner) AddOnClose(f func()) {

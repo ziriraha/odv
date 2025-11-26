@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/ziriraha/odv/internal"
 )
@@ -44,9 +43,9 @@ var switchCmd = &cobra.Command{
 			spinner := ls.(*internal.LineSpinner)
 			if err != nil {
 				ms.AddOnClose(func() { internal.Error.Printf("in repository %v: %v", repoName, err) })
-				ms.Stop(spinner, color.New(color.FgRed, color.Bold).Sprint("✗"))
+				ms.Fail(spinner)
 			} else {
-				ms.Stop(spinner, color.New(color.FgGreen, color.Bold).Sprint("✓"))
+				ms.Done(spinner)
 			}
 		}, true)
 	},
