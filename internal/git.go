@@ -11,10 +11,8 @@ var FallbackBranch = "master"
 
 type Repository struct {
 	lock sync.Mutex
-
 	path string
 	Color func(format string, a ...any) string
-
 	branches []string
 }
 
@@ -33,7 +31,7 @@ func (r *Repository) GetBranches() ([]string) {
 		Debug.Printf("GetBranches error: %v", err)
 		return nil
 	}
-	for _, line := range strings.Split(string(output), "\n") {
+	for _, line := range strings.Split(output, "\n") {
 		line = strings.TrimSpace(line)
 		line = strings.TrimPrefix(line, "* ")
 		if line != "" { r.branches = append(r.branches, line) }
@@ -57,14 +55,14 @@ func (r *Repository) SwitchBranch(branchName string) error {
 
 func (r *Repository) GetCurrentBranch() (string, error) {
 	output, err := r.runCommand("branch", "--show-current")
-	return strings.TrimSpace(string(output)), err
+	return strings.TrimSpace(output), err
 }
 
 func (r *Repository) GetStatus() ([]string, error) {
 	output, err := r.runCommand("status", "--porcelain")
 	if err != nil { return nil, err }
 	var changes []string
-	for _, line := range strings.Split(string(output), "\n") {
+	for _, line := range strings.Split(output, "\n") {
 		line = strings.TrimRight(line, " \t\n\r")
 		if line != "" { changes = append(changes, line) }
 	}
@@ -76,7 +74,7 @@ func (r *Repository) GetAheadBehindInfo(branch string) (ahead int, behind int, e
 	if isVersionBranch(branch) { remote = "origin" }
 	output, err := r.runCommand("rev-list", "--left-right", "--count", fmt.Sprintf("%s...%s/%s", branch, remote, branch))
 	if err != nil { return 0, 0, err }
-	parts := strings.Fields(strings.TrimSpace(string(output)))
+	parts := strings.Fields(strings.TrimSpace(output))
 	fmt.Sscanf(parts[0], "%d", &ahead)
 	fmt.Sscanf(parts[1], "%d", &behind)
 	return ahead, behind, nil
