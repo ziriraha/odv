@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/ziriraha/odv/internal"
 )
@@ -26,20 +27,26 @@ var switchCmd = &cobra.Command{
 			repoBranch.Store(repoName, branchName)
 		}, true)
 
-		var wg sync.WaitGroup
-		wg.Go(func() {
-			internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
-				branchName, _ := repoBranch.Load(repoName)
-				fmt.Printf("[%s] Switching to '%s'\n", repository.Color(repoName), branchName)
-			}, false)
-		})
+		var spinners sync.Map
+		ms := internal.NewMultiSpinner()
+		defer ms.Close()
+		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
+			branchName, _ := repoBranch.Load(repoName)
+			text := fmt.Sprintf("[%s] Switching to '%s'", repository.Color(repoName), branchName)
+			spinners.Store(repoName, ms.Add(text))
+		}, false)
+		ms.Start()
 
 		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
 			branchName, _ := repoBranch.Load(repoName)
 			err := repository.SwitchBranch(branchName.(string))
-			wg.Wait()
+			ls, _ := spinners.Load(repoName)
+			spinner := ls.(*internal.LineSpinner)
 			if err != nil {
-				internal.Error.Printf("in repository %v: %v", repoName, err) 
+				ms.AddOnClose(func() { internal.Error.Printf("in repository %v: %v", repoName, err) })
+				ms.Stop(spinner, color.New(color.FgRed, color.Bold).Sprint("✗"))
+			} else {
+				ms.Stop(spinner, color.New(color.FgGreen, color.Bold).Sprint("✓"))
 			}
 		}, true)
 	},
