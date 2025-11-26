@@ -22,4 +22,4 @@ func GetVersion(branch string) string {
 	return version
 }
 
-func isVersionBranch(branch string) bool { return branch == DetectVersion(branch) }
+func IsVersionBranch(branch string) bool { return branch == DetectVersion(branch) }

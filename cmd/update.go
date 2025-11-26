@@ -17,6 +17,10 @@ var updateCmd = &cobra.Command{
 				internal.Error.Printf("in repository %v: getting current branch: %v", repoName, err)
 				return
 			}
+			if !internal.IsVersionBranch(curBranch) {
+				internal.Debug.Printf("in repository %v: current branch %v is not a version branch, skipping update", repoName, curBranch)
+				return
+			}
 			err = repository.Fetch(curBranch)
 			if err != nil {
 				internal.Error.Printf("in repository %v: fetching branch %v: %v", repoName, curBranch, err)
