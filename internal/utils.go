@@ -31,11 +31,8 @@ func SetupLoggers(debug bool) {
 var repoNames []string
 var Repositories = make(map[string]*Repository)
 func InitializeConfiguration() {
-	odooHome := os.Getenv("ODOO_HOME")
-	if len(odooHome) == 0 {
-		odooHome = "."
-	}
-	Debug.Printf("Configuration's Odoo Home: '%v'", odooHome)
+	odooHome := GetOdooPath()
+	Debug.Printf("Odoo Home: '%v'", odooHome)
 
 	Repositories[".vscode"] =
 			&Repository{ path: odooHome + "/.vscode", Color: color.RedString, DefaultBranch: "main" }
@@ -54,15 +51,8 @@ func ForEachRepository(action func(i int, repoName string, repo *Repository), is
 	var wg sync.WaitGroup
 	for i, n := range repoNames {
 		repo := Repositories[n]
-		if isConcurrent {
-			wg.Add(1)
-			go func(i int, n string, r *Repository) {
-				defer wg.Done()
-				action(i, n, r)
-			}(i, n, repo)
-		} else { 
-			action(i, n, repo)
-		}
+		if isConcurrent { wg.Go(func() { action(i, n, repo) })
+		} else { action(i, n, repo) }
 	}
 	wg.Wait()
 }

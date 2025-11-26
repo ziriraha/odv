@@ -20,7 +20,7 @@ type Repository struct {
 func (r *Repository) runCommand(args ...string) (string, error) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	output, err := exec.Command("git", append([]string{"-C", r.path}, args...)...).Output()
+	output, err := exec.Command("git", append([]string{"-C", r.path}, args...)...).CombinedOutput()
 	if err != nil { err = fmt.Errorf("%w: %v", err, string(output)) }
 	return string(output), err
 }
