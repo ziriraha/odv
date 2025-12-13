@@ -42,6 +42,7 @@ var statusCmd = &cobra.Command{
 	Long: "Will print the current branch in all three odoo repositories.",
     Run: func(cmd *cobra.Command, args []string) {
 		var statuses sync.Map
+		short, _ := cmd.Flags().GetBool("short")
 		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
 			curBranch := repository.GetCurrentBranch()
 			ahead, behind, err := repository.GetAheadBehindInfo(curBranch)
@@ -61,10 +62,12 @@ var statusCmd = &cobra.Command{
 			if ahead > 0 { output.WriteString(color.GreenString("↑%d", ahead)) }
 			if behind > 0 { output.WriteString(color.RedString("↓%d", behind)) }
 			output.WriteString("\n")
-			for _, change := range changes {
-				indicator := colorizeStatusIndicator(change[0:2])
-				change = fmt.Sprintf("%s %s", indicator, change[3:])
-				output.WriteString(fmt.Sprintf("    %s\n", change))
+			if !short {
+				for _, change := range changes {
+					indicator := colorizeStatusIndicator(change[0:2])
+					change = fmt.Sprintf("%s %s", indicator, change[3:])
+					output.WriteString(fmt.Sprintf("   |%s\n", change))
+				}
 			}
 			statuses.Store(repoName, output.String())
 		}, true)
@@ -78,5 +81,6 @@ var statusCmd = &cobra.Command{
 }
 
 func init() {
+	statusCmd.Flags().BoolP("short", "s", false, "Do not show changes (shorter version).")
     rootCmd.AddCommand(statusCmd)
 }
