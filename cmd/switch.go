@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"sync"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/ziriraha/odv/internal"
@@ -14,11 +15,12 @@ var switchCmd = &cobra.Command{
 	Long: "Will switch all three odoo repositories to the specified branch or version.",
 	Args: cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
-		version := internal.DetectVersion(args[0])
+    	input, _ := strings.CutPrefix(args[0], "odoo-dev:")
+		version := internal.DetectVersion(input)
 		internal.Debug.Printf("switchCmd: version '%v' was detected", version)
 		var repoBranch sync.Map
 		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
-			branchName := args[0]
+			branchName := input
 			if !repository.BranchExists(branchName) {
 				branchName = version
 				if !repository.BranchExists(branchName) { branchName = internal.FallbackBranch }
