@@ -15,7 +15,7 @@ var updateCmd = &cobra.Command{
     Run: func(cmd *cobra.Command, args []string) {
 		var branchRepo sync.Map
 		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
-			if repoName == ".vscode" { return }
+			if repoName == ".workspace" { return }
 			curBranch := repository.GetCurrentBranch()
 			if !internal.IsVersionBranch(curBranch) {
 				internal.Debug.Printf("in repository %v: current branch %v is not a version branch, skipping update", repoName, curBranch)

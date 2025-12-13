@@ -34,7 +34,7 @@ func InitializeConfiguration() {
 	odooHome := GetOdooPath()
 	Debug.Printf("Odoo Home: '%v'", odooHome)
 
-	Repositories[".vscode"] = &Repository{ path: odooHome + "/.vscode", Color: color.RedString }
+	Repositories[".workspace"] = &Repository{ path: odooHome + "/.vscode", Color: color.RedString }
 	Repositories["community"] = &Repository{ path: odooHome + "/community", Color: color.YellowString }
 	Repositories["enterprise"] = &Repository{ path: odooHome + "/enterprise", Color: color.GreenString }
 	Repositories["upgrade"] = &Repository{ path: odooHome + "/upgrade", Color: color.BlueString }
