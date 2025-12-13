@@ -28,14 +28,17 @@ var listCmd = &cobra.Command{
 		}, true)
 
 		branchPresence := make(map[string]string)
+		showVersions, _ := cmd.Flags().GetBool("versions")
 		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
 			branchList, _ := branches.Load(repoName)
 			letter := repoName[0:1]
 			for _, branch := range branchList.([]string) {
-				presence, ok := branchPresence[branch]
-				if !ok { presence = strings.Repeat(" ", len(internal.Repositories)) }
-				presence = presence[:i] + letter + presence[i+1:]
-				branchPresence[branch] = presence
+				if !internal.IsVersionBranch(branch) || showVersions {
+					presence, ok := branchPresence[branch]
+					if !ok { presence = strings.Repeat(" ", len(internal.Repositories)) }
+					presence = presence[:i] + letter + presence[i+1:]
+					branchPresence[branch] = presence
+				}
 			}
 		}, false)
 
@@ -62,5 +65,6 @@ var listCmd = &cobra.Command{
 }
 
 func init() {
+	listCmd.Flags().BoolP("versions", "v", false, "Show version branches.")
     rootCmd.AddCommand(listCmd)
 }
