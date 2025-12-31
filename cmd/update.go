@@ -14,57 +14,54 @@ var updateCmd = &cobra.Command{
 	Long: "Will fetch and pull (ff-only) the current branch in all three odoo repositories.",
     Run: func(cmd *cobra.Command, args []string) {
 		var branchRepo sync.Map
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
-			if repoName == ".workspace" { return }
+		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
+			if repoName == ".workspace" { return nil }
 			curBranch := repository.GetCurrentBranch()
-			if !internal.IsVersionBranch(curBranch) {
+			if internal.IsVersionBranch(curBranch) {
+				branchRepo.Store(repoName, curBranch)
+			} else {
 				internal.Debug.Printf("in repository %v: current branch %v is not a version branch, skipping update", repoName, curBranch)
-				return
 			}
-			branchRepo.Store(repoName, curBranch)
+			return nil
 		}, true)
 
 		var spinners sync.Map
 		ms := internal.NewMultiSpinner()
 		defer ms.Close()
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
+		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
 			branchName, ok := branchRepo.Load(repoName)
-			if !ok { return }
-			text := fmt.Sprintf("[%s] Fetching '%s'", repository.Color(repoName), branchName)
-			spinners.Store(repoName, ms.Add(text))
+			if ok {
+				text := fmt.Sprintf("[%s] Fetching '%s'", repository.Color(repoName), branchName)
+				spinners.Store(repoName, ms.Add(text))
+			}
+			return nil
 		}, false)
 		ms.Start()
 
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
+		errors := internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
 			curBranch, ok := branchRepo.Load(repoName)
-			if !ok { return }
+			if !ok { return nil }
 			branchName := curBranch.(string)
 			s, _ := spinners.Load(repoName)
 			spinner := s.(*internal.LineSpinner)
-			if !ok { return }
 			err := repository.Fetch(branchName)
 			if err != nil {
-				ms.AddOnClose(func() {
-					internal.Error.Printf("in repository %v: fetching branch %v: %v", repoName, branchName, err)
-				})
 				ms.Fail(spinner)
-				return
+				return fmt.Errorf("fetching branch %v: %v", branchName, err)
 			}
-			newSpinnerText := fmt.Sprintf("[%s] Pulling '%s'", repository.Color(repoName), branchName)
-			ms.UpdateText(spinner, newSpinnerText)
+			ms.UpdateText(spinner, fmt.Sprintf("[%s] Pulling '%s'", repository.Color(repoName), branchName))
 			err = repository.Pull()
 			if err != nil {
-				ms.AddOnClose(func() {
-					internal.Error.Printf("in repository %v: pulling branch %v: %v", repoName, branchName, err)
-				})
 				ms.Fail(spinner)
-			} else {
-				newSpinnerText := fmt.Sprintf("[%s] Updating '%s'", repository.Color(repoName), branchName)
-				ms.UpdateText(spinner, newSpinnerText)
-				ms.Done(spinner)
+				return fmt.Errorf("pulling branch %v: %v", branchName, err)
 			}
+			ms.UpdateText(spinner, fmt.Sprintf("[%s] Updated '%s'", repository.Color(repoName), branchName))
+			ms.Done(spinner)
+			return nil
 		}, true)
-	},
+
+		internal.PrintRepositoryErrors(errors)
+    },
 }
 
 func init() {

@@ -19,37 +19,40 @@ var switchCmd = &cobra.Command{
 		version := internal.DetectVersion(input)
 		internal.Debug.Printf("switchCmd: version '%v' was detected", version)
 		var repoBranch sync.Map
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
+		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
 			branchName := input
 			if !repository.BranchExists(branchName) {
 				branchName = version
 				if !repository.BranchExists(branchName) { branchName = internal.FallbackBranch }
 			}
 			repoBranch.Store(repoName, branchName)
+			return nil
 		}, true)
 
 		var spinners sync.Map
 		ms := internal.NewMultiSpinner()
-		defer ms.Close()
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
+		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
 			branchName, _ := repoBranch.Load(repoName)
 			text := fmt.Sprintf("[%s] Switching to '%s'", repository.Color(repoName), branchName)
 			spinners.Store(repoName, ms.Add(text))
+			return nil
 		}, false)
 		ms.Start()
 
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
+		errors := internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
 			branchName, _ := repoBranch.Load(repoName)
 			err := repository.SwitchBranch(branchName.(string))
 			ls, _ := spinners.Load(repoName)
 			spinner := ls.(*internal.LineSpinner)
 			if err != nil {
-				ms.AddOnClose(func() { internal.Error.Printf("in repository %v: %v", repoName, err) })
 				ms.Fail(spinner)
 			} else {
 				ms.Done(spinner)
 			}
+			return err
 		}, true)
+		ms.Close()
+		internal.PrintRepositoryErrors(errors)
 	},
 }
 

@@ -33,7 +33,7 @@ type LineSpinner struct {
 
 }
 
-func NewMultiSpinner() *MultiSpinner { 
+func NewMultiSpinner() *MultiSpinner {
 	return &MultiSpinner{
 		done: make(chan struct{}),
 		frames: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
@@ -109,12 +109,6 @@ func (m *MultiSpinner) Fail(ls *LineSpinner) {
 	ls.done = true
 	ls.result = color.New(color.FgRed, color.Bold).Sprint("✗")
 	m.mu.Unlock()
-}
-
-func (m *MultiSpinner) AddOnClose(f func()) {
-    m.mu.Lock()
-    defer m.mu.Unlock()
-    m.onClose = append(m.onClose, f)
 }
 
 func (m *MultiSpinner) Close() {

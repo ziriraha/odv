@@ -43,12 +43,25 @@ func InitializeConfiguration() {
 	Debug.Printf("Initialized repositories: %v", strings.Join(repoNames, ", "))
 }
 
-func ForEachRepository(action func(i int, repoName string, repo *Repository), isConcurrent bool) {
+func ForEachRepository(action func(i int, repoName string, repo *Repository) error, isConcurrent bool) map[string]error {
 	var wg sync.WaitGroup
+	var err sync.Map
 	for i, n := range repoNames {
 		repo := Repositories[n]
-		if isConcurrent { wg.Go(func() { action(i, n, repo) })
-		} else { action(i, n, repo) }
+		if isConcurrent { wg.Go(func() { err.Store(n, action(i, n, repo)) })
+		} else { err.Store(n, action(i, n, repo)) }
 	}
 	wg.Wait()
+	var errors = make(map[string]error)
+	err.Range(func(key, value any) bool {
+		if value != nil { errors[key.(string)] = value.(error) }
+		return true
+	})
+	return errors
+}
+
+func PrintRepositoryErrors(errors map[string]error) {
+	for repoName, err := range errors {
+		Error.Printf("in repository %v: %v", Repositories[repoName].Color(repoName), err)
+	}
 }

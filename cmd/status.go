@@ -43,7 +43,7 @@ var statusCmd = &cobra.Command{
     Run: func(cmd *cobra.Command, args []string) {
 		var statuses sync.Map
 		short, _ := cmd.Flags().GetBool("short")
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
+		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
 			curBranch := repository.GetCurrentBranch()
 			ahead, behind, err := repository.GetAheadBehindInfo(curBranch)
 			if err != nil {
@@ -70,12 +70,12 @@ var statusCmd = &cobra.Command{
 				}
 			}
 			statuses.Store(repoName, output.String())
+			return nil
 		}, true)
 
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
-			if statusStr, ok := statuses.Load(repoName); ok {
-				fmt.Print(statusStr.(string))
-			}
+		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
+			if statusStr, ok := statuses.Load(repoName); ok { fmt.Print(statusStr.(string)) }
+			return nil
 		}, false)
 	},
 }

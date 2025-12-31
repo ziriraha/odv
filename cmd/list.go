@@ -23,31 +23,33 @@ var listCmd = &cobra.Command{
     Long:  "Will list all branches in the specified odoo repositories.",
     Run: func(cmd *cobra.Command, args []string) {
 		var branches sync.Map
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
+		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
 			branches.Store(repoName, repository.GetBranches())
+			return nil
 		}, true)
 
 		branchPresence := make(map[string]string)
 		showVersions, _ := cmd.Flags().GetBool("versions")
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
+		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
 			branchList, _ := branches.Load(repoName)
 			letter := repoName[0:1]
 			for _, branch := range branchList.([]string) {
 				if !internal.IsVersionBranch(branch) || showVersions {
 					presence, ok := branchPresence[branch]
 					if !ok { presence = strings.Repeat(" ", len(internal.Repositories)) }
-					presence = presence[:i] + letter + presence[i+1:]
-					branchPresence[branch] = presence
+					branchPresence[branch] = presence[:i] + letter + presence[i+1:]
 				}
 			}
+			return nil
 		}, false)
 
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) {
+		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
 			letter := repoName[0:1]
 			colorizedLetter := repository.Color(letter)
 			for branch := range branchPresence {
 				branchPresence[branch] = strings.ReplaceAll(branchPresence[branch], letter, colorizedLetter)
 			}
+			return nil
 		}, false)
 
 		sortedBranches := slices.SortedFunc(maps.Keys(branchPresence), func(a, b string) int {
@@ -58,9 +60,7 @@ var listCmd = &cobra.Command{
 			} else { return strings.Compare(a, b) }
 		})
 
-		for _, branch := range sortedBranches {
-			fmt.Printf("%s - %s\n", branchPresence[branch], branch)
-		}
+		for _, branch := range sortedBranches { fmt.Printf("%s - %s\n", branchPresence[branch], branch) }
 	},
 }
 
