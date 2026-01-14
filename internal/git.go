@@ -81,14 +81,17 @@ func (r *Repository) GetAheadBehindInfo(branch string) (ahead int, behind int, e
 	return ahead, behind, nil
 }
 
-func (r *Repository) Fetch(branch string) error {
-	remote := "dev"
-	if IsVersionBranch(branch) { remote = "origin" }
-	_, err := r.runCommand("fetch", remote, branch)
+func (r *Repository) Fetch(remote string) error {
+	_, err := r.runCommand("fetch", remote)
 	return err
 }
 
 func (r *Repository) Pull() error {
 	_, err := r.runCommand("pull", "--ff-only")
+	return err
+}
+
+func (r *Repository) IntegrateChangesFromRemote(remote, branch string) error {
+	_, err := r.runCommand("merge", "--ff-only", fmt.Sprintf("%s/%s", remote, branch))
 	return err
 }
