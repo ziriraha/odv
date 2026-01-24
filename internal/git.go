@@ -70,11 +70,9 @@ func (r *Repository) GetStatus() ([]string, error) {
 	return changes, nil
 }
 
-func (r *Repository) GetAheadBehindInfo(branch string) (ahead int, behind int, err error) {
-	remote := "dev"
-	if IsVersionBranch(branch) { remote = "origin" }
+func (r *Repository) GetAheadBehindInfo(remote, branch string) (ahead int, behind int, err error) {
 	output, err := r.runCommand("rev-list", "--left-right", "--count", fmt.Sprintf("%s...%s/%s", branch, remote, branch))
-	if err != nil { return 0, 0, err }
+	if err != nil { return -1, -1, err }
 	parts := strings.Fields(strings.TrimSpace(output))
 	fmt.Sscanf(parts[0], "%d", &ahead)
 	fmt.Sscanf(parts[1], "%d", &behind)

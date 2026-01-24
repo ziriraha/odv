@@ -45,10 +45,11 @@ var statusCmd = &cobra.Command{
 		short, _ := cmd.Flags().GetBool("short")
 		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
 			curBranch := repository.GetCurrentBranch()
-			ahead, behind, err := repository.GetAheadBehindInfo(curBranch)
+			remote := "dev"
+			if internal.IsVersionBranch(curBranch) || repoName == "upgrade" { remote = "origin" }
+			ahead, behind, err := repository.GetAheadBehindInfo(remote, curBranch)
 			if err != nil {
 				internal.Debug.Printf("in repository %v: error getting ahead/behind info probably due to no upstream branch: %v", repoName, err)
-				ahead, behind = -1, -1
 			}
 			changes, err := repository.GetStatus()
 			if err != nil {
