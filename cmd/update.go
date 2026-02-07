@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"sync"
-	"strings"
 	"slices"
+	"strings"
+	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/ziriraha/odv/internal"
+	"github.com/ziriraha/odv/lib"
 )
 
 var updateCmd = &cobra.Command{
@@ -17,19 +17,19 @@ var updateCmd = &cobra.Command{
     Run: func(cmd *cobra.Command, args []string) {
 		var branches sync.Map
 		var branchRepo sync.Map
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
+		lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
 			if repoName == ".workspace" { return nil }
 			curBranch := repository.GetCurrentBranch()
 			branchRepo.Store(repoName, curBranch)
 			var branchSlice []string
 			for _, branch := range repository.GetBranches() {
-				if internal.IsVersionBranch(branch) {
+				if lib.IsVersionBranch(branch) {
 					branchSlice = append(branchSlice, branch)
 				}
 			}
 			slices.SortFunc(branchSlice, func(a, b string) int {
-				aVersion := internal.GetVersion(a)
-				bVersion := internal.GetVersion(b)
+				aVersion := lib.GetVersion(a)
+				bVersion := lib.GetVersion(b)
 				comparison := strings.Compare(aVersion, bVersion)
 				if comparison != 0 { return -comparison
 				} else { return strings.Compare(a, b) }
@@ -39,9 +39,9 @@ var updateCmd = &cobra.Command{
 		}, true)
 
 		var spinners sync.Map
-		ms := internal.NewMultiSpinner()
+		ms := lib.NewMultiSpinner()
 		defer ms.Close()
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
+		lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
 			_, ok := branches.Load(repoName)
 			if ok {
 				text := fmt.Sprintf("[%s] Fetching", repository.Color(repoName))
@@ -51,18 +51,18 @@ var updateCmd = &cobra.Command{
 		}, false)
 		ms.Start()
 
-		errors := internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
+		errors := lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
 			branchList, ok := branches.Load(repoName)
 			if !ok { return nil }
 			s, _ := spinners.Load(repoName)
-			spinner := s.(*internal.LineSpinner)
+			spinner := s.(*lib.LineSpinner)
 			err := repository.Fetch("origin")
 			if err != nil {
 				ms.Fail(spinner)
 				return fmt.Errorf("fetching remote origin: %v", err)
 			}
 			for _, branchName := range branchList.([]string) {
-				if !internal.IsVersionBranch(branchName) { continue }
+				if !lib.IsVersionBranch(branchName) { continue }
 				ms.UpdateText(spinner, fmt.Sprintf("[%s] Switching '%s'", repository.Color(repoName), branchName))
 				err = repository.SwitchBranch(branchName)
 				if err != nil {
@@ -83,7 +83,7 @@ var updateCmd = &cobra.Command{
 			return nil
 		}, true)
 
-		internal.PrintRepositoryErrors(errors)
+		lib.PrintRepositoryErrors(errors)
     },
 }
 

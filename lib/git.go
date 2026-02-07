@@ -1,4 +1,4 @@
-package internal
+package lib
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ func (r *Repository) GetBranches() ([]string) {
 		Debug.Printf("GetBranches error: %v", err)
 		return nil
 	}
-	for _, line := range strings.Split(output, "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		line = strings.TrimSpace(line)
 		line = strings.TrimPrefix(line, "* ")
 		if line != "" { r.branches = append(r.branches, line) }
@@ -63,7 +63,7 @@ func (r *Repository) GetStatus() ([]string, error) {
 	output, err := r.runCommand("status", "--porcelain")
 	if err != nil { return nil, err }
 	var changes []string
-	for _, line := range strings.Split(output, "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		line = strings.TrimRight(line, " \t\n\r")
 		if line != "" { changes = append(changes, line) }
 	}

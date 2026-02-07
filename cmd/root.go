@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/ziriraha/odv/internal"
+	"github.com/ziriraha/odv/lib"
 )
 
 var rootCmd = &cobra.Command{
@@ -12,8 +12,8 @@ var rootCmd = &cobra.Command{
 	Short: "An all in one tool for Odoo development.",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		debug, _ := cmd.Flags().GetBool("debug")
-        internal.SetupLoggers(debug)
-		internal.InitializeConfiguration()
+        lib.SetupLoggers(debug)
+		lib.InitializeConfiguration()
     },
 }
 

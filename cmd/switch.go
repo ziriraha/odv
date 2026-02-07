@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"sync"
 	"strings"
+	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/ziriraha/odv/internal"
+	"github.com/ziriraha/odv/lib"
 )
 
 var switchCmd = &cobra.Command{
@@ -16,22 +16,22 @@ var switchCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
     	input, _ := strings.CutPrefix(args[0], "odoo-dev:")
-		version := internal.DetectVersion(input)
-		internal.Debug.Printf("switchCmd: version '%v' was detected", version)
+		version := lib.DetectVersion(input)
+		lib.Debug.Printf("switchCmd: version '%v' was detected", version)
 		var repoBranch sync.Map
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
+		lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
 			branchName := input
 			if !repository.BranchExists(branchName) {
 				branchName = version
-				if !repository.BranchExists(branchName) { branchName = internal.FallbackBranch }
+				if !repository.BranchExists(branchName) { branchName = lib.FallbackBranch }
 			}
 			repoBranch.Store(repoName, branchName)
 			return nil
 		}, true)
 
 		var spinners sync.Map
-		ms := internal.NewMultiSpinner()
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
+		ms := lib.NewMultiSpinner()
+		lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
 			branchName, _ := repoBranch.Load(repoName)
 			text := fmt.Sprintf("[%s] Switching to '%s'", repository.Color(repoName), branchName)
 			spinners.Store(repoName, ms.Add(text))
@@ -39,11 +39,11 @@ var switchCmd = &cobra.Command{
 		}, false)
 		ms.Start()
 
-		errors := internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
+		errors := lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
 			branchName, _ := repoBranch.Load(repoName)
 			err := repository.SwitchBranch(branchName.(string))
 			ls, _ := spinners.Load(repoName)
-			spinner := ls.(*internal.LineSpinner)
+			spinner := ls.(*lib.LineSpinner)
 			if err != nil {
 				ms.Fail(spinner)
 			} else {
@@ -52,7 +52,7 @@ var switchCmd = &cobra.Command{
 			return err
 		}, true)
 		ms.Close()
-		internal.PrintRepositoryErrors(errors)
+		lib.PrintRepositoryErrors(errors)
 	},
 }
 

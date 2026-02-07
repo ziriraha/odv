@@ -5,10 +5,9 @@ import (
 	"maps"
 	"slices"
 	"strings"
-	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/ziriraha/odv/internal"
+	"github.com/ziriraha/odv/lib"
 )
 
 // Print the list in the following format:
@@ -22,28 +21,26 @@ var listCmd = &cobra.Command{
     Short: "List all branches in the repositories.",
     Long:  "Will list all branches in the specified odoo repositories.",
     Run: func(cmd *cobra.Command, args []string) {
-		var branches sync.Map
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
-			branches.Store(repoName, repository.GetBranches())
+		lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
+			repository.GetBranches() // Pre-fetch branch list
 			return nil
 		}, true)
 
 		branchPresence := make(map[string]string)
 		showVersions, _ := cmd.Flags().GetBool("versions")
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
-			branchList, _ := branches.Load(repoName)
+		lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
 			letter := repoName[0:1]
-			for _, branch := range branchList.([]string) {
-				if !internal.IsVersionBranch(branch) || showVersions {
+			for _, branch := range repository.GetBranches() {
+				if !lib.IsVersionBranch(branch) || showVersions {
 					presence, ok := branchPresence[branch]
-					if !ok { presence = strings.Repeat(" ", len(internal.Repositories)) }
+					if !ok { presence = strings.Repeat(" ", len(lib.Repositories)) }
 					branchPresence[branch] = presence[:i] + letter + presence[i+1:]
 				}
 			}
 			return nil
 		}, false)
 
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
+		lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
 			letter := repoName[0:1]
 			colorizedLetter := repository.Color(letter)
 			for branch := range branchPresence {
@@ -53,8 +50,8 @@ var listCmd = &cobra.Command{
 		}, false)
 
 		sortedBranches := slices.SortedFunc(maps.Keys(branchPresence), func(a, b string) int {
-			aVersion := internal.GetVersion(a)
-			bVersion := internal.GetVersion(b)
+			aVersion := lib.GetVersion(a)
+			bVersion := lib.GetVersion(b)
 			comparison := strings.Compare(aVersion, bVersion)
 			if comparison != 0 { return -comparison
 			} else { return strings.Compare(a, b) }

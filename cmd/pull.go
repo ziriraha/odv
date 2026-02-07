@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/ziriraha/odv/internal"
+	"github.com/ziriraha/odv/lib"
 )
 
 var pullCmd = &cobra.Command{
@@ -14,21 +14,21 @@ var pullCmd = &cobra.Command{
 	Long: "Will pull (ff-only) the current branch in all three odoo repositories.",
     Run: func(cmd *cobra.Command, args []string) {
 		var branchRepo sync.Map
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
+		lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
 			if repoName == ".workspace" { return nil }
 			curBranch := repository.GetCurrentBranch()
-			if internal.IsVersionBranch(curBranch) {
+			if lib.IsVersionBranch(curBranch) {
 				branchRepo.Store(repoName, curBranch)
 			} else {
-				internal.Debug.Printf("in repository %v: current branch %v is not a version branch, skipping sync", repoName, curBranch)
+				lib.Debug.Printf("in repository %v: current branch %v is not a version branch, skipping sync", repoName, curBranch)
 			}
 			return nil
 		}, true)
 
 		var spinners sync.Map
-		ms := internal.NewMultiSpinner()
+		ms := lib.NewMultiSpinner()
 		defer ms.Close()
-		internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
+		lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
 			branchName, ok := branchRepo.Load(repoName)
 			if ok {
 				text := fmt.Sprintf("[%s] Pulling '%s'", repository.Color(repoName), branchName)
@@ -38,12 +38,12 @@ var pullCmd = &cobra.Command{
 		}, false)
 		ms.Start()
 
-		errors := internal.ForEachRepository(func (i int, repoName string, repository *internal.Repository) error {
+		errors := lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
 			curBranch, ok := branchRepo.Load(repoName)
 			if !ok { return nil }
 			branchName := curBranch.(string)
 			s, _ := spinners.Load(repoName)
-			spinner := s.(*internal.LineSpinner)
+			spinner := s.(*lib.LineSpinner)
 			err := repository.Pull()
 			if err != nil {
 				ms.Fail(spinner)
@@ -54,7 +54,7 @@ var pullCmd = &cobra.Command{
 			return nil
 		}, true)
 
-		internal.PrintRepositoryErrors(errors)
+		lib.PrintRepositoryErrors(errors)
     },
 }
 
