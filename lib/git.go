@@ -93,3 +93,10 @@ func (r *Repository) IntegrateChangesFromRemote(remote, branch string) error {
 	_, err := r.runCommand("merge", "--ff-only", fmt.Sprintf("%s/%s", remote, branch))
 	return err
 }
+
+func (r *Repository) CommitAll(message string) error {
+	_, err := r.runCommand("add", ".")
+	if err != nil { return err }
+	_, err = r.runCommand("commit", "-m", message)
+	return err
+}
