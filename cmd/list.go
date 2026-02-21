@@ -5,63 +5,59 @@ import (
 	"maps"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/spf13/cobra"
 	"github.com/ziriraha/odv/lib"
+	"github.com/ziriraha/odv/views"
 )
 
-// Print the list in the following format:
-// ceu - branch -> this branch is present in community, enterprise and upgrade
-// c u - branch -> this branch is present in community and upgrade
-//  e  - branch -> this branch is present in enterprise only
-
 var listCmd = &cobra.Command{
-    Use:   "list",
+	Use:     "list",
 	Aliases: []string{"ls"},
-    Short: "List all branches in the repositories.",
-    Long:  "Will list all branches in the specified odoo repositories.",
-    Run: func(cmd *cobra.Command, args []string) {
-		lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
-			repository.GetBranches() // Pre-fetch branch list
-			return nil
-		}, true)
+	Short:   "List available branches.",
+	Long:    "Will list all branches in the specified odoo repositories with color-coded presence indicators.",
+	Run: func(cmd *cobra.Command, args []string) {
+		showVersions, _ := cmd.Flags().GetBool("all")
+		branchPresence := make(map[string][]bool)
 
-		branchPresence := make(map[string]string)
-		showVersions, _ := cmd.Flags().GetBool("versions")
-		lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
-			letter := repoName[0:1]
-			for _, branch := range repository.GetBranches() {
-				if !lib.IsVersionBranch(branch) || showVersions {
-					presence, ok := branchPresence[branch]
-					if !ok { presence = strings.Repeat(" ", len(lib.Repositories)) }
-					branchPresence[branch] = presence[:i] + letter + presence[i+1:]
+		for _, branch := range lib.GetAllBranches() {
+			if !lib.IsVersionBranch(branch) || showVersions {
+				branchPresence[branch] = make([]bool, len(lib.SortedRepoNames))
+			}
+		}
+
+		var wg sync.WaitGroup
+		for repoIndex, repoName := range lib.SortedRepoNames {
+			repository := lib.Repositories[repoName]
+			wg.Go(func() {
+				for _, branch := range repository.GetBranches() {
+					if _, ok := branchPresence[branch]; ok {
+						branchPresence[branch][repoIndex] = true
+					}
+				}
+			})
+		}
+		wg.Wait()
+
+		branches := slices.Collect(maps.Keys(branchPresence))
+		lib.SortBranches(branches)
+		for _, branch := range branches {
+			var indicator strings.Builder
+
+			for repoIndex, repoName := range lib.SortedRepoNames {
+				if branchPresence[branch][repoIndex] {
+					indicator.WriteString(views.RenderRepoLetter(repoName))
+				} else {
+					indicator.WriteString(views.FaintStyle.Render("·"))
 				}
 			}
-			return nil
-		}, false)
-
-		lib.ForEachRepository(func (i int, repoName string, repository *lib.Repository) error {
-			letter := repoName[0:1]
-			colorizedLetter := repository.Color(letter)
-			for branch := range branchPresence {
-				branchPresence[branch] = strings.ReplaceAll(branchPresence[branch], letter, colorizedLetter)
-			}
-			return nil
-		}, false)
-
-		sortedBranches := slices.SortedFunc(maps.Keys(branchPresence), func(a, b string) int {
-			aVersion := lib.GetVersion(a)
-			bVersion := lib.GetVersion(b)
-			comparison := strings.Compare(aVersion, bVersion)
-			if comparison != 0 { return -comparison
-			} else { return strings.Compare(a, b) }
-		})
-
-		for _, branch := range sortedBranches { fmt.Printf("%s - %s\n", branchPresence[branch], branch) }
+			fmt.Printf("%s - %s\n", indicator.String(), branch)
+		}
 	},
 }
 
 func init() {
-	listCmd.Flags().BoolP("versions", "v", false, "Show version branches.")
-    rootCmd.AddCommand(listCmd)
+	listCmd.Flags().BoolP("all", "a", false, "Show all branches.")
+	rootCmd.AddCommand(listCmd)
 }

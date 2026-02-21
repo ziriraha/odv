@@ -11,17 +11,14 @@ var rootCmd = &cobra.Command{
 	Use:   "odv",
 	Short: "An all in one tool for Odoo development.",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		debug, _ := cmd.Flags().GetBool("debug")
-        lib.SetupLoggers(debug)
 		lib.InitializeConfiguration()
-    },
-}
-
-func init() {
-    rootCmd.PersistentFlags().Bool("debug", false, "Enable debug output")
+		lib.PrefetchAllBranches()
+	},
 }
 
 func Execute() {
 	err := rootCmd.Execute()
-	if err != nil { os.Exit(1) }
+	if err != nil {
+		os.Exit(1)
+	}
 }
