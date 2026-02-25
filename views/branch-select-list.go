@@ -111,7 +111,7 @@ func (cfg BranchSelectListView) Run() (string, error) {
 	l.Styles.PaginationStyle = ListPaginationStyle
 	l.Styles.HelpStyle = ListHelpStyle
 
-	p := tea.NewProgram(branchListModel{list: l})
+	p := tea.NewProgram(branchListModel{list: l}, tea.WithAltScreen())
 	finalModel, err := p.Run()
 	if err != nil {
 		return "", fmt.Errorf("error running program: %w", err)
