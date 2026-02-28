@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"maps"
 	"slices"
 	"strings"
@@ -52,7 +51,7 @@ var listCmd = &cobra.Command{
 					indicator.WriteString(views.FaintStyle.Render("·"))
 				}
 			}
-			fmt.Printf("%s - %s\n", indicator.String(), branch)
+			cmd.Printf("%s - %s\n", indicator.String(), branch)
 		}
 	},
 }

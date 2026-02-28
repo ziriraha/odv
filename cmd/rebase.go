@@ -81,7 +81,7 @@ var rebaseCmd = &cobra.Command{
 		}
 
 		if len(states)-len(skipped) == 0 {
-			fmt.Println("Nothing to rebase.")
+			cmd.Println("Nothing to rebase.")
 			return
 		}
 
@@ -126,7 +126,7 @@ var rebaseCmd = &cobra.Command{
 		}.Run()
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
+			cmd.PrintErrln(err)
 			os.Exit(1)
 		}
 	},

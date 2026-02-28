@@ -69,7 +69,7 @@ var statusCmd = &cobra.Command{
 		wg.Wait()
 
 		for _, status := range statuses {
-			fmt.Print(status.status)
+			cmd.Print(status.status)
 		}
 	},
 }

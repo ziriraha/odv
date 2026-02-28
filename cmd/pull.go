@@ -59,7 +59,7 @@ var pullCmd = &cobra.Command{
 		}
 
 		if len(states)-len(skipped) == 0 {
-			fmt.Println("No repositories on version branches to pull.")
+			cmd.Println("No repositories on version branches to pull.")
 			return
 		}
 
@@ -91,7 +91,7 @@ var pullCmd = &cobra.Command{
 		}.Run()
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
+			cmd.PrintErrln(err)
 			os.Exit(1)
 		}
 		if failCount > 0 {

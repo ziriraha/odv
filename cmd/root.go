@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/ziriraha/odv/lib"
+	"github.com/ziriraha/odv/views"
 )
 
 var rootCmd = &cobra.Command{
@@ -18,6 +19,11 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	err := rootCmd.Execute()
+
+	rootCmd.SetOut(os.Stdout)
+	rootCmd.SetErr(os.Stderr)
+	rootCmd.SetErrPrefix(views.ErrorStyle.Render("ERROR "))
+
 	if err != nil {
 		os.Exit(1)
 	}

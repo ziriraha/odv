@@ -51,7 +51,7 @@ var switchCmd = &cobra.Command{
 		var selectedBranch string
 		branches := lib.GetAllBranches()
 		if len(branches) == 0 {
-			fmt.Println("No branches found.")
+			cmd.Println("No branches found.")
 			os.Exit(1)
 		}
 
@@ -62,7 +62,7 @@ var switchCmd = &cobra.Command{
 			}.Run()
 
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error running program: %v\n", err)
+				cmd.PrintErrf("Error running program: %v\n", err)
 				os.Exit(1)
 			}
 			if choice == "" {
@@ -74,7 +74,7 @@ var switchCmd = &cobra.Command{
 		}
 
 		if !slices.Contains(branches, selectedBranch) {
-			fmt.Fprintf(os.Stderr, "branch '%s' was not found\n", selectedBranch)
+			cmd.PrintErrf("branch '%s' was not found\n", selectedBranch)
 			os.Exit(1)
 		}
 		version := lib.DetectVersion(selectedBranch)
@@ -88,7 +88,7 @@ var switchCmd = &cobra.Command{
 				if !repository.BranchExists(branchName) {
 					branchName = lib.FallbackBranch
 					if !repository.BranchExists(branchName) {
-						fmt.Fprintf(os.Stderr, "no suitable branch found for '%s' in repo '%s' (tried: %s, %s, %s)\n", selectedBranch, repoName, selectedBranch, version, lib.FallbackBranch)
+						cmd.PrintErrf("no suitable branch found for '%s' in repo '%s' (tried: %s, %s, %s)\n", selectedBranch, repoName, selectedBranch, version, lib.FallbackBranch)
 						os.Exit(1)
 					}
 				}
@@ -104,7 +104,7 @@ var switchCmd = &cobra.Command{
 			targetBranches[i] = repoBranches[repoName]
 		}
 
-		views.RepoBranchSpinnerView{
+		failCount, err := views.RepoBranchSpinnerView{
 			Title:  "Switching branches",
 			States: states,
 			LaunchOp: func(i int) tea.Cmd {
@@ -122,7 +122,15 @@ var switchCmd = &cobra.Command{
 				}
 				return ""
 			},
-		}.RunOrExit()
+		}.Run()
+
+		if err != nil {
+			cmd.PrintErrln(err)
+			os.Exit(1)
+		}
+		if failCount > 0 {
+			os.Exit(1)
+		}
 	},
 }
 

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -97,11 +98,11 @@ var updateCmd = &cobra.Command{
 		}
 
 		if len(states)-len(skipped) == 0 {
-			fmt.Println("No repositories to update.")
+			cmd.Println("No repositories to update.")
 			return
 		}
 
-		views.RepoBranchSpinnerView{
+		failCount, err := views.RepoBranchSpinnerView{
 			Title:          "Updating repositories",
 			States:         states,
 			SkippedIndices: skipped,
@@ -137,7 +138,15 @@ var updateCmd = &cobra.Command{
 				}
 				return ""
 			},
-		}.RunOrExit()
+		}.Run()
+
+		if err != nil {
+			cmd.PrintErrln(err)
+			os.Exit(1)
+		}
+		if failCount > 0 {
+			os.Exit(1)
+		}
 	},
 }
 

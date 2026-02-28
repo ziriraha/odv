@@ -2,7 +2,6 @@ package views
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -99,17 +98,6 @@ func (cfg RepoBranchSpinnerView) Run() (failCount int, err error) {
 		return fm.failCount, nil
 	}
 	return 0, nil
-}
-
-func (cfg RepoBranchSpinnerView) RunOrExit() {
-	failCount, err := cfg.Run()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
-	if failCount > 0 {
-		os.Exit(1)
-	}
 }
 
 // Bubbletea model
