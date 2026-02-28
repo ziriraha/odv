@@ -21,7 +21,7 @@ func performPull(repoIndex int, repo *lib.Repository, extra *pullRepoExtra) tea.
 		startTime := time.Now()
 		return views.RepoOperationDoneMsg{
 			RepoIndex: repoIndex,
-			Err:       repo.Pull(lib.GetRemoteForBranch(extra.branch), extra.branch),
+			Err:       repo.PullRebase(lib.GetRemoteForBranch(extra.branch), extra.branch),
 			Duration:  time.Since(startTime),
 		}
 	}

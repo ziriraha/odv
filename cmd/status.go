@@ -10,37 +10,6 @@ import (
 	"github.com/ziriraha/odv/views"
 )
 
-func colorizeIndicator(s string) string {
-	switch s {
-	case "A", "R":
-		return views.DiffAddedStyle.Render(s)
-	case "M":
-		return views.DiffModifiedStyle.Render(s)
-	case "D":
-		return views.DiffDeletedStyle.Render(s)
-	case "?":
-		return views.DiffUntrackedStyle.Render(s)
-	default:
-		return s
-	}
-}
-
-func colorizeStatusIndicator(status string) string {
-	parts := strings.Split(status, "")
-	if len(parts) != 2 {
-		return status
-	}
-
-	switch status {
-	case "UU", "AA", "DD", "AU", "UA", "DU", "UD":
-		return views.DiffConflictStyle.Render(status)
-	case "!!":
-		return views.DiffUntrackedStyle.Render(status)
-	default:
-		return colorizeIndicator(parts[0]) + colorizeIndicator(parts[1])
-	}
-}
-
 var statusCmd = &cobra.Command{
 	Use:     "status",
 	Aliases: []string{"st"},
@@ -89,7 +58,7 @@ var statusCmd = &cobra.Command{
 				output.WriteString("\n")
 				if !short {
 					for _, change := range changes {
-						indicator := colorizeStatusIndicator(change[0:2])
+						indicator := views.ColorizeStatusIndicator(change[0:2])
 						change = fmt.Sprintf("%s %s", indicator, change[3:])
 						output.WriteString(fmt.Sprintf("   |%s\n", change))
 					}

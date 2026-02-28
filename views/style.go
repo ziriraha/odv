@@ -1,6 +1,8 @@
 package views
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ziriraha/odv/lib"
@@ -69,3 +71,34 @@ var (
 	Checkmark = SuccessStyle.Render("✓")
 	Cross     = ErrorStyle.Render("✗")
 )
+
+func colorizeIndicator(s string) string {
+	switch s {
+	case "A", "R":
+		return DiffAddedStyle.Render(s)
+	case "M":
+		return DiffModifiedStyle.Render(s)
+	case "D":
+		return DiffDeletedStyle.Render(s)
+	case "?":
+		return DiffUntrackedStyle.Render(s)
+	default:
+		return s
+	}
+}
+
+func ColorizeStatusIndicator(status string) string {
+	parts := strings.Split(status, "")
+	if len(parts) != 2 {
+		return status
+	}
+
+	switch status {
+	case "UU", "AA", "DD", "AU", "UA", "DU", "UD":
+		return DiffConflictStyle.Render(status)
+	case "!!":
+		return DiffUntrackedStyle.Render(status)
+	default:
+		return colorizeIndicator(parts[0]) + colorizeIndicator(parts[1])
+	}
+}

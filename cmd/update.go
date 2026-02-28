@@ -35,7 +35,7 @@ func fetchNextBranch(repoIndex int, repo *lib.Repository, state *views.RepoOpera
 	return func() tea.Msg {
 		var err error
 		if branch == extra.currentBranch {
-			err = repo.Pull(lib.RemoteOrigin, branch)
+			err = repo.PullRebase(lib.RemoteOrigin, branch)
 		} else {
 			err = repo.FetchRefspec(lib.RemoteOrigin, branch)
 		}

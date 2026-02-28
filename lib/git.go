@@ -112,7 +112,7 @@ func (r *Repository) GetAheadBehindInfo(remote, branch string) (ahead int, behin
 	return ahead, behind, nil
 }
 
-func (r *Repository) Pull(remote, branch string) error {
+func (r *Repository) PullRebase(remote, branch string) error {
 	return r.writeCommand("pull", "--rebase", remote, branch)
 }
 
