@@ -2,7 +2,6 @@ package lib
 
 import (
 	"fmt"
-	"os/exec"
 	"slices"
 	"strings"
 	"sync"
@@ -26,20 +25,13 @@ type Repository struct {
 func (r *Repository) readCommand(args ...string) (string, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
-	output, err := exec.Command("git", append([]string{"-C", r.path}, args...)...).CombinedOutput()
-	if err != nil {
-		err = fmt.Errorf("%w: %v", err, string(output))
-	}
-	return string(output), err
+	return runCommand("git", append([]string{"-C", r.path}, args...)...)
 }
 
 func (r *Repository) writeCommand(args ...string) error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	output, err := exec.Command("git", append([]string{"-C", r.path}, args...)...).CombinedOutput()
-	if err != nil {
-		err = fmt.Errorf("%w: %v", err, string(output))
-	}
+	_, err := runCommand("git", append([]string{"-C", r.path}, args...)...)
 	return err
 }
 
@@ -62,13 +54,7 @@ func (r *Repository) GetBranches() []string {
 }
 
 func (r *Repository) BranchExists(branchName string) bool {
-	branches := r.GetBranches()
-	for _, branch := range branches {
-		if branch == branchName {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(r.GetBranches(), branchName)
 }
 
 func (r *Repository) SwitchBranch(branchName string) error {

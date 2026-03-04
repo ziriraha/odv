@@ -2,6 +2,7 @@ package lib
 
 import (
 	"os"
+	"runtime"
 	"slices"
 	"strings"
 )
@@ -12,6 +13,21 @@ func GetOdooPath() string {
 		odooHome = "."
 	}
 	return odooHome
+}
+
+func GetFilestorePath() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		panic("Failed to get user home directory: " + err.Error())
+	}
+	switch osType := runtime.GOOS; {
+	case strings.Contains(osType, "darwin"):
+		return home + "/Library/Application Support/Odoo/filestore"
+	case strings.Contains(osType, "linux"):
+		return home + "/.local/share/Odoo/filestore/"
+	default:
+		panic("Unsupported OS: " + osType)
+	}
 }
 
 func DetectVersion(branch string) string {

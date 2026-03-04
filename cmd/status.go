@@ -48,7 +48,7 @@ var statusCmd = &cobra.Command{
 				if ahead < 0 && behind < 0 {
 					curBranch = views.LocalBranchStyle.Render(curBranch)
 				}
-				output.WriteString(fmt.Sprintf("%s %s - %s ", views.FaintStyle.Render("*"), views.RenderRepoName(repoName), curBranch))
+				fmt.Fprintf(&output, "%s %s - %s ", views.FaintStyle.Render("*"), views.RenderRepoName(repoName), curBranch)
 				if ahead > 0 {
 					output.WriteString(views.AheadStyle.Render(fmt.Sprintf("↑%d", ahead)))
 				}
@@ -60,7 +60,7 @@ var statusCmd = &cobra.Command{
 					for _, change := range changes {
 						indicator := views.ColorizeStatusIndicator(change[0:2])
 						change = fmt.Sprintf("%s %s", indicator, change[3:])
-						output.WriteString(fmt.Sprintf("   |%s\n", change))
+						fmt.Fprintf(&output, "   |%s\n", change)
 					}
 				}
 				statuses[i] = repoStatus{name: repoName, status: output.String()}

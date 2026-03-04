@@ -1,7 +1,9 @@
 package lib
 
 import (
+	"fmt"
 	"maps"
+	"os/exec"
 	"slices"
 	"sync"
 )
@@ -37,4 +39,13 @@ func GetAllBranches() []string {
 	}
 	SortBranches(branches)
 	return slices.Compact(branches)
+}
+
+func runCommand(name string, args ...string) (string, error) {
+	cmd := exec.Command(name, args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		err = fmt.Errorf("%w: %v", err, string(output))
+	}
+	return string(output), err
 }

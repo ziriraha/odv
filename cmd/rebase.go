@@ -109,13 +109,13 @@ var rebaseCmd = &cobra.Command{
 					hasConflicts := len(extra.conflicts) > 0
 					if hasConflicts {
 						var b strings.Builder
-						b.WriteString(fmt.Sprintf("%s %s - conflicts rebasing on '%s'\n",
+						fmt.Fprintf(&b, "%s %s - conflicts rebasing on '%s'\n",
 							views.Cross,
 							views.RenderRepoName(state.Name),
-							extra.branch))
+							extra.branch)
 						for _, change := range extra.conflicts {
 							indicator := views.ColorizeStatusIndicator(change[0:2])
-							b.WriteString(fmt.Sprintf("   |%s %s\n", indicator, change[3:]))
+							fmt.Fprintf(&b, "   |%s %s\n", indicator, change[3:])
 						}
 						return b.String()
 					}
