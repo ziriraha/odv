@@ -59,6 +59,9 @@ var rebaseCmd = &cobra.Command{
 		skipped := make(map[int]bool)
 
 		for _, repoName := range lib.SortedRepoNames {
+			if repoName == lib.WorkspaceRepo {
+				continue
+			}
 			repository := lib.Repositories[repoName]
 			curBranch := repository.GetCurrentBranch()
 			s := views.NewRepoOperationState(repoName)
@@ -67,10 +70,7 @@ var rebaseCmd = &cobra.Command{
 			extra := &rebaseRepoExtra{branch: version}
 			idx := len(states)
 
-			if repoName == lib.WorkspaceRepo {
-				extra.skipReason = "no remote found"
-				skipped[idx] = true
-			} else if curBranch == version {
+			if curBranch == version {
 				extra.skipReason = "already on that base"
 				skipped[idx] = true
 			}

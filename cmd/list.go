@@ -28,6 +28,9 @@ var listCmd = &cobra.Command{
 
 		var wg sync.WaitGroup
 		for repoIndex, repoName := range lib.SortedRepoNames {
+			if repoName == lib.WorkspaceRepo {
+				continue
+			}
 			repository := lib.Repositories[repoName]
 			wg.Go(func() {
 				for _, branch := range repository.GetBranches() {
@@ -45,6 +48,9 @@ var listCmd = &cobra.Command{
 			var indicator strings.Builder
 
 			for repoIndex, repoName := range lib.SortedRepoNames {
+				if repoName == lib.WorkspaceRepo {
+					continue
+				}
 				if branchPresence[branch][repoIndex] {
 					indicator.WriteString(views.RenderRepoLetter(repoName))
 				} else {

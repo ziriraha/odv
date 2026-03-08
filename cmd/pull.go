@@ -38,6 +38,9 @@ var pullCmd = &cobra.Command{
 		skipped := make(map[int]bool)
 
 		for _, repoName := range lib.SortedRepoNames {
+			if repoName == lib.WorkspaceRepo {
+				continue
+			}
 			repository := lib.Repositories[repoName]
 			curBranch := repository.GetCurrentBranch()
 			s := views.NewRepoOperationState(repoName)
@@ -45,10 +48,7 @@ var pullCmd = &cobra.Command{
 			extra := &pullRepoExtra{branch: curBranch}
 			idx := len(states)
 
-			if repoName == lib.WorkspaceRepo {
-				extra.skipReason = "no remote found"
-				skipped[idx] = true
-			} else if !lib.IsVersionBranch(curBranch) {
+			if !lib.IsVersionBranch(curBranch) {
 				extra.skipReason = "not on version branch"
 				skipped[idx] = true
 			}

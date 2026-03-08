@@ -14,7 +14,7 @@ var Repositories = make(map[string]*Repository)
 func InitializeConfiguration() {
 	odooHome := GetOdooPath()
 
-	Repositories[WorkspaceRepo] = &Repository{path: odooHome + "/.vscode"}
+	Repositories[WorkspaceRepo] = &Repository{path: odooHome + "/.workspace"}
 	Repositories["community"] = &Repository{path: odooHome + "/community"}
 	Repositories["enterprise"] = &Repository{path: odooHome + "/enterprise"}
 	Repositories["upgrade"] = &Repository{path: odooHome + "/upgrade"}
@@ -32,7 +32,10 @@ func PrefetchAllBranches() {
 
 func GetAllBranches() []string {
 	var branches []string
-	for _, repo := range Repositories {
+	for repoName, repo := range Repositories {
+		if repoName == WorkspaceRepo {
+			continue // skip as .workspace will create branches for everything.
+		}
 		for _, branch := range repo.GetBranches() {
 			branches = append(branches, branch)
 		}

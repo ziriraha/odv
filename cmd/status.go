@@ -27,6 +27,9 @@ var statusCmd = &cobra.Command{
 		var wg sync.WaitGroup
 
 		for i, repoName := range lib.SortedRepoNames {
+			if repoName == lib.WorkspaceRepo {
+				continue
+			}
 			wg.Go(func() {
 				repository := lib.Repositories[repoName]
 				var repoWg sync.WaitGroup

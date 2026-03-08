@@ -18,17 +18,14 @@ func performSwitch(repoIndex int, repo *lib.Repository, state *views.RepoOperati
 		startTime := time.Now()
 
 		if state.Name == lib.WorkspaceRepo {
-			curBranch := repo.GetCurrentBranch()
-			if curBranch != "" && curBranch != lib.FallbackBranch {
-				changes, err := repo.GetStatus()
-				if err == nil && len(changes) > 0 {
-					commitMessage := fmt.Sprintf("odv auto-commit %v\n\nBefore switching to '%s'", time.Now().Format(time.RFC3339), targetBranch)
-					if err := repo.CommitAll(commitMessage); err != nil {
-						return views.RepoOperationDoneMsg{
-							RepoIndex: repoIndex,
-							Err:       fmt.Errorf("auto-commit failed before switch: %w", err),
-							Duration:  time.Since(startTime),
-						}
+			changes, err := repo.GetStatus()
+			if err == nil && len(changes) > 0 {
+				commitMessage := fmt.Sprintf("odv auto-commit %v\n\nBefore switching to '%s'", time.Now().Format(time.RFC3339), targetBranch)
+				if err := repo.CommitAll(commitMessage); err != nil {
+					return views.RepoOperationDoneMsg{
+						RepoIndex: repoIndex,
+						Err:       fmt.Errorf("auto-commit failed before switch: %w", err),
+						Duration:  time.Since(startTime),
 					}
 				}
 			}
@@ -80,16 +77,21 @@ var switchCmd = &cobra.Command{
 		version := lib.DetectVersion(selectedBranch)
 
 		repoBranches := make(map[string]string)
-		for _, repoName := range lib.SortedRepoNames {
-			repository := lib.Repositories[repoName]
+		for repoName, repository := range lib.Repositories {
 			branchName := selectedBranch
 			if !repository.BranchExists(branchName) {
-				branchName = version
-				if !repository.BranchExists(branchName) {
-					branchName = lib.FallbackBranch
+				if repoName == lib.WorkspaceRepo {
+					if err := repository.CreateBranchFrom("main", branchName); err != nil {
+						cmd.PrintErrf("failed to create branch for .workspace: %v", err)
+					}
+				} else {
+					branchName = version
 					if !repository.BranchExists(branchName) {
-						cmd.PrintErrf("no suitable branch found for '%s' in repo '%s' (tried: %s, %s, %s)\n", selectedBranch, repoName, selectedBranch, version, lib.FallbackBranch)
-						os.Exit(1)
+						branchName = lib.FallbackBranch
+						if !repository.BranchExists(branchName) {
+							cmd.PrintErrf("no suitable branch found for '%s' in repo '%s' (tried: %s, %s, %s)\n", selectedBranch, repoName, selectedBranch, version, lib.FallbackBranch)
+							os.Exit(1)
+						}
 					}
 				}
 			}

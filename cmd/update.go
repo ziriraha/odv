@@ -67,12 +67,6 @@ var updateCmd = &cobra.Command{
 			repository := lib.Repositories[repoName]
 
 			if repoName == lib.WorkspaceRepo {
-				s := views.NewRepoOperationState(repoName)
-				idx := len(states)
-				states = append(states, &s)
-				extras = append(extras, &updateRepoExtra{})
-				repoNames = append(repoNames, repoName)
-				skipped[idx] = true
 				continue
 			}
 

@@ -61,6 +61,10 @@ func (r *Repository) SwitchBranch(branchName string) error {
 	return r.writeCommand("switch", branchName)
 }
 
+func (r *Repository) CreateBranchFrom(baseBranch, newBranch string) error {
+	return r.writeCommand("switch", "-c", newBranch, baseBranch)
+}
+
 func (r *Repository) GetCurrentBranch() string {
 	output, err := r.readCommand("branch", "--show-current")
 	if err != nil {
