@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -100,4 +101,8 @@ func ColorizeStatusIndicator(status string) string {
 	default:
 		return colorizeIndicator(parts[0]) + colorizeIndicator(parts[1])
 	}
+}
+
+func RepoLine(repoName string, format string, a ...any) string {
+	return fmt.Sprintf("%s %s - %s ", FaintStyle.Render("*"), RenderRepoName(repoName), fmt.Sprintf(format, a...))
 }

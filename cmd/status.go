@@ -51,7 +51,7 @@ var statusCmd = &cobra.Command{
 				if ahead < 0 && behind < 0 {
 					curBranch = views.LocalBranchStyle.Render(curBranch)
 				}
-				fmt.Fprintf(&output, "%s %s - %s ", views.FaintStyle.Render("*"), views.RenderRepoName(repoName), curBranch)
+				fmt.Fprint(&output, views.RepoLine(repoName, "%s ", curBranch))
 				if ahead > 0 {
 					output.WriteString(views.AheadStyle.Render(fmt.Sprintf("↑%d", ahead)))
 				}

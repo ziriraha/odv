@@ -13,7 +13,7 @@ var dbCmd = &cobra.Command{
 }
 
 var dbDropCmd = &cobra.Command{
-	Use:   "drop <dbname|prefix>",
+	Use:   "drop <dbname> | --all [prefix]",
 	Short: "Drops all R&D db's in PostgreSQL. Use with caution!",
 	Long:  "Drops databases in PSQL and Filestore. If no args are given with --all, it drops the 'rd-*' databases. If a prefix is given, it drops all databases starting with that prefix.",
 	Args:  cobra.MaximumNArgs(1),
@@ -73,7 +73,7 @@ var dbDuplicateCmd = &cobra.Command{
 }
 
 var dbListCmd = &cobra.Command{
-	Use:   "list",
+	Use:   "list [prefix]",
 	Short: "Lists all R&D databases in PostgreSQL.",
 	Long:  "Lists all databases in PostgreSQL that start with 'rd-'.",
 	Args:  cobra.MaximumNArgs(1),

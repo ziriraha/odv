@@ -59,7 +59,19 @@ func (r *Repository) SwitchBranch(branchName string) error {
 }
 
 func (r *Repository) CreateBranchFrom(baseBranch, newBranch string) error {
-	return r.writeCommand("switch", "-c", newBranch, baseBranch)
+	err := r.writeCommand("switch", "-c", newBranch, baseBranch)
+	if err == nil {
+		r.getBranchesOnce = sync.Once{} // reset so branches will be reloaded on next GetBranches call
+	}
+	return err
+}
+
+func (r *Repository) DeleteBranch(branchName string) error {
+	err := r.writeCommand("branch", "-D", branchName)
+	if err == nil {
+		r.getBranchesOnce = sync.Once{} // reset so branches will be reloaded on next GetBranches call
+	}
+	return err
 }
 
 func (r *Repository) GetCurrentBranch() string {
