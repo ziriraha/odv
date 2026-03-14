@@ -72,11 +72,37 @@ var dbDuplicateCmd = &cobra.Command{
 	},
 }
 
+var dbListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "Lists all R&D databases in PostgreSQL.",
+	Long:  "Lists all databases in PostgreSQL that start with 'rd-'.",
+	Args:  cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		prefix := "rd-"
+		if len(args) == 1 {
+			prefix = args[0]
+		}
+		dbs, err := lib.ListDBs(prefix)
+		if err != nil {
+			cmd.PrintErrln("Failed to list databases:", err)
+			os.Exit(1)
+		}
+		if len(dbs) == 0 {
+			cmd.Printf("No databases found with the '%s' prefix.\n", prefix)
+			return
+		}
+		for _, db := range dbs {
+			cmd.Printf("%s\n", db)
+		}
+	},
+}
+
 func init() {
 	dbDropCmd.Flags().BoolP("all", "a", false, "Drop all databases")
 	dbCmd.AddCommand(dbDropCmd)
 
 	dbCmd.AddCommand(dbDuplicateCmd)
+	dbCmd.AddCommand(dbListCmd)
 
 	rootCmd.AddCommand(dbCmd)
 }

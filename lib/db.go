@@ -46,9 +46,6 @@ func DuplicateDB(sourceDB, newDB string) error {
 }
 
 func ListDBs(prefix string) ([]string, error) {
-	if prefix == "" {
-		prefix = "rd-"
-	}
 	output, err := runDBCommand("psql", "-d", "postgres", "-t", "-c", "SELECT datname FROM pg_database WHERE datname LIKE '"+prefix+"%';")
 	if err != nil {
 		return nil, err
