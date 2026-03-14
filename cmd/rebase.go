@@ -58,11 +58,11 @@ var rebaseCmd = &cobra.Command{
 		var repoNames []string
 		skipped := make(map[int]bool)
 
-		for _, repoName := range lib.SortedRepoNames {
-			if repoName == lib.WorkspaceRepo {
+		for _, repoName := range lib.GetSortedRepoNames() {
+			if repoName == ".workspace" {
 				continue
 			}
-			repository := lib.Repositories[repoName]
+			repository := lib.GetRepository(repoName)
 			curBranch := repository.GetCurrentBranch()
 			s := views.NewRepoOperationState(repoName)
 
@@ -90,7 +90,7 @@ var rebaseCmd = &cobra.Command{
 			States:         states,
 			SkippedIndices: skipped,
 			LaunchOp: func(i int) tea.Cmd {
-				return performRebase(i, lib.Repositories[repoNames[i]], extras[i])
+				return performRebase(i, lib.GetRepository(repoNames[i]), extras[i])
 			},
 			RenderRepo: func(i int, state *views.RepoOperationState) string {
 				extra := extras[i]

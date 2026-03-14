@@ -23,15 +23,15 @@ var statusCmd = &cobra.Command{
 			status string
 		}
 
-		statuses := make([]repoStatus, len(lib.SortedRepoNames))
+		statuses := make([]repoStatus, len(lib.GetSortedRepoNames()))
 		var wg sync.WaitGroup
 
-		for i, repoName := range lib.SortedRepoNames {
-			if repoName == lib.WorkspaceRepo {
+		for i, repoName := range lib.GetSortedRepoNames() {
+			if repoName == ".workspace" {
 				continue
 			}
 			wg.Go(func() {
-				repository := lib.Repositories[repoName]
+				repository := lib.GetRepository(repoName)
 				var repoWg sync.WaitGroup
 				var ahead, behind int
 				var changes []string

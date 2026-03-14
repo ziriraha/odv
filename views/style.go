@@ -5,13 +5,12 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/ziriraha/odv/lib"
 )
 
 func GetRepoStyle(repoName string) lipgloss.Style {
 	var repoColor string
 	switch repoName {
-	case lib.WorkspaceRepo:
+	case ".workspace":
 		repoColor = "1" // Red
 	case "community":
 		repoColor = "3" // Yellow

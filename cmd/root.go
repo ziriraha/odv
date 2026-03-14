@@ -4,27 +4,20 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/ziriraha/odv/lib"
 	"github.com/ziriraha/odv/views"
 )
 
 var rootCmd = &cobra.Command{
 	Use:   "odv",
 	Short: "An all in one tool for Odoo development.",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		lib.InitializeConfiguration()
-		lib.PrefetchAllBranches()
-	},
 }
 
 func Execute() {
-	err := rootCmd.Execute()
-
 	rootCmd.SetOut(os.Stdout)
 	rootCmd.SetErr(os.Stderr)
 	rootCmd.SetErrPrefix(views.ErrorStyle.Render("ERROR "))
 
-	if err != nil {
+	if rootCmd.Execute() != nil {
 		os.Exit(1)
 	}
 }

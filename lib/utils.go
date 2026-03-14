@@ -4,36 +4,64 @@ import (
 	"fmt"
 	"maps"
 	"os/exec"
+	"path/filepath"
 	"slices"
 	"sync"
 )
 
-var SortedRepoNames []string
-var Repositories = make(map[string]*Repository)
+var (
+	sortedRepoNames     []string
+	sortedRepoNamesOnce sync.Once
 
-func InitializeConfiguration() {
-	odooHome := GetOdooPath()
+	repositories     = make(map[string]*Repository)
+	repositoriesOnce sync.Once
+)
 
-	Repositories[WorkspaceRepo] = &Repository{path: odooHome + "/.workspace"}
-	Repositories["community"] = &Repository{path: odooHome + "/community"}
-	Repositories["enterprise"] = &Repository{path: odooHome + "/enterprise"}
-	Repositories["upgrade"] = &Repository{path: odooHome + "/upgrade"}
+func GetRepositories() map[string]*Repository {
+	repositoriesOnce.Do(func() {
+		cfg := GetConfig()
 
-	SortedRepoNames = slices.Sorted(maps.Keys(Repositories))
+		for name, folderName := range cfg.Repositories {
+			fullPath := filepath.Join(cfg.OdooHome, folderName)
+			repositories[name] = &Repository{path: fullPath}
+		}
+
+		var wg sync.WaitGroup
+		for _, repo := range repositories {
+			wg.Go(func() { repo.GetBranches() })
+		}
+		wg.Wait()
+	})
+	return repositories
 }
 
-func PrefetchAllBranches() {
-	var wg sync.WaitGroup
-	for _, repo := range Repositories {
-		wg.Go(func() { repo.GetBranches() })
+func GetRepository(name string) *Repository {
+	repo, exists := GetRepositories()[name]
+	if !exists {
+		panic("Repository not found: " + name)
 	}
-	wg.Wait()
+	return repo
+}
+
+func GetSortedRepoNames() []string {
+	sortedRepoNamesOnce.Do(func() {
+		sortedRepoNames = slices.Sorted(maps.Keys(GetRepositories()))
+	})
+	return sortedRepoNames
+}
+
+func GetRepositoryByIndex(index int) *Repository {
+	repoNames := GetSortedRepoNames()
+	if index < 0 || index >= len(repoNames) {
+		panic(fmt.Sprintf("Repository index out of range: %d", index))
+	}
+	return GetRepository(repoNames[index])
 }
 
 func GetAllBranches() []string {
 	var branches []string
-	for repoName, repo := range Repositories {
-		if repoName == WorkspaceRepo {
+	for repoName, repo := range GetRepositories() {
+		if repoName == ".workspace" {
 			continue // skip as .workspace will create branches for everything.
 		}
 		for _, branch := range repo.GetBranches() {

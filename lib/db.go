@@ -3,9 +3,30 @@ package lib
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 )
+
+var (
+	filestorePath     string
+	filestorePathOnce sync.Once
+)
+
+func GetFilestorePath() string {
+	filestorePathOnce.Do(func() {
+		home := GetUserHome()
+		switch osType := runtime.GOOS; {
+		case strings.Contains(osType, "darwin"):
+			filestorePath = home + "/Library/Application Support/Odoo/filestore"
+		case strings.Contains(osType, "linux"):
+			filestorePath = home + "/.local/share/Odoo/filestore/"
+		default:
+			panic("Unsupported OS: " + osType)
+		}
+	})
+	return filestorePath
+}
 
 var DBMutex sync.Mutex
 

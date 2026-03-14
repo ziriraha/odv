@@ -63,10 +63,10 @@ var updateCmd = &cobra.Command{
 		var repoNames []string
 		skipped := make(map[int]bool)
 
-		for _, repoName := range lib.SortedRepoNames {
-			repository := lib.Repositories[repoName]
+		for _, repoName := range lib.GetSortedRepoNames() {
+			repository := lib.GetRepository(repoName)
 
-			if repoName == lib.WorkspaceRepo {
+			if repoName == ".workspace" {
 				continue
 			}
 
@@ -101,13 +101,13 @@ var updateCmd = &cobra.Command{
 			States:         states,
 			SkippedIndices: skipped,
 			LaunchOp: func(i int) tea.Cmd {
-				return fetchNextBranch(i, lib.Repositories[repoNames[i]], states[i], extras[i])
+				return fetchNextBranch(i, lib.GetRepository(repoNames[i]), states[i], extras[i])
 			},
 			OnMsg: func(msg tea.Msg, allStates []*views.RepoOperationState) tea.Cmd {
 				if m, ok := msg.(branchFetchedMsg); ok {
 					extra := extras[m.repoIndex]
 					extra.currentIndex++
-					return fetchNextBranch(m.repoIndex, lib.Repositories[repoNames[m.repoIndex]], allStates[m.repoIndex], extra)
+					return fetchNextBranch(m.repoIndex, lib.GetRepository(repoNames[m.repoIndex]), allStates[m.repoIndex], extra)
 				}
 				return nil
 			},

@@ -22,16 +22,16 @@ var listCmd = &cobra.Command{
 
 		for _, branch := range lib.GetAllBranches() {
 			if !lib.IsVersionBranch(branch) || showVersions {
-				branchPresence[branch] = make([]bool, len(lib.SortedRepoNames))
+				branchPresence[branch] = make([]bool, len(lib.GetSortedRepoNames()))
 			}
 		}
 
 		var wg sync.WaitGroup
-		for repoIndex, repoName := range lib.SortedRepoNames {
-			if repoName == lib.WorkspaceRepo {
+		for repoIndex, repoName := range lib.GetSortedRepoNames() {
+			if repoName == ".workspace" {
 				continue
 			}
-			repository := lib.Repositories[repoName]
+			repository := lib.GetRepository(repoName)
 			wg.Go(func() {
 				for _, branch := range repository.GetBranches() {
 					if _, ok := branchPresence[branch]; ok {
@@ -47,8 +47,8 @@ var listCmd = &cobra.Command{
 		for _, branch := range branches {
 			var indicator strings.Builder
 
-			for repoIndex, repoName := range lib.SortedRepoNames {
-				if repoName == lib.WorkspaceRepo {
+			for repoIndex, repoName := range lib.GetSortedRepoNames() {
+				if repoName == ".workspace" {
 					continue
 				}
 				if branchPresence[branch][repoIndex] {

@@ -17,7 +17,7 @@ func performSwitch(repoIndex int, repo *lib.Repository, state *views.RepoOperati
 	return func() tea.Msg {
 		startTime := time.Now()
 
-		if state.Name == lib.WorkspaceRepo {
+		if state.Name == ".workspace" {
 			changes, err := repo.GetStatus()
 			if err == nil && len(changes) > 0 {
 				commitMessage := fmt.Sprintf("odv auto-commit %v\n\nBefore switching to '%s'", time.Now().Format(time.RFC3339), targetBranch)
@@ -77,10 +77,10 @@ var switchCmd = &cobra.Command{
 		version := lib.DetectVersion(selectedBranch)
 
 		repoBranches := make(map[string]string)
-		for repoName, repository := range lib.Repositories {
+		for repoName, repository := range lib.GetRepositories() {
 			branchName := selectedBranch
 			if !repository.BranchExists(branchName) {
-				if repoName == lib.WorkspaceRepo {
+				if repoName == ".workspace" {
 					if err := repository.CreateBranchFrom("main", branchName); err != nil {
 						cmd.PrintErrf("failed to create branch for .workspace: %v", err)
 					}
@@ -98,9 +98,9 @@ var switchCmd = &cobra.Command{
 			repoBranches[repoName] = branchName
 		}
 
-		states := make([]*views.RepoOperationState, len(lib.SortedRepoNames))
-		targetBranches := make([]string, len(lib.SortedRepoNames))
-		for i, repoName := range lib.SortedRepoNames {
+		states := make([]*views.RepoOperationState, len(lib.GetSortedRepoNames()))
+		targetBranches := make([]string, len(lib.GetSortedRepoNames()))
+		for i, repoName := range lib.GetSortedRepoNames() {
 			s := views.NewRepoOperationState(repoName)
 			states[i] = &s
 			targetBranches[i] = repoBranches[repoName]
@@ -110,7 +110,7 @@ var switchCmd = &cobra.Command{
 			Title:  "Switching branches",
 			States: states,
 			LaunchOp: func(i int) tea.Cmd {
-				return performSwitch(i, lib.Repositories[lib.SortedRepoNames[i]], states[i], targetBranches[i])
+				return performSwitch(i, lib.GetRepository(states[i].Name), states[i], targetBranches[i])
 			},
 			RenderRepo: func(i int, state *views.RepoOperationState) string {
 				tb := targetBranches[i]

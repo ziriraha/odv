@@ -11,7 +11,6 @@ const (
 	RemoteOrigin   = "origin"
 	RemoteDev      = "dev"
 	FallbackBranch = "master"
-	WorkspaceRepo  = ".workspace"
 )
 
 type Repository struct {
@@ -36,20 +35,18 @@ func (r *Repository) writeCommand(args ...string) error {
 }
 
 func (r *Repository) GetBranches() []string {
-	if r.branches == nil {
-		r.getBranchesOnce.Do(func() {
-			output, err := r.readCommand("branch")
-			if err == nil {
-				for line := range strings.SplitSeq(output, "\n") {
-					line = strings.TrimSpace(line)
-					line = strings.TrimPrefix(line, "* ")
-					if line != "" {
-						r.branches = append(r.branches, line)
-					}
+	r.getBranchesOnce.Do(func() {
+		output, err := r.readCommand("branch")
+		if err == nil {
+			for line := range strings.SplitSeq(output, "\n") {
+				line = strings.TrimSpace(line)
+				line = strings.TrimPrefix(line, "* ")
+				if line != "" {
+					r.branches = append(r.branches, line)
 				}
 			}
-		})
-	}
+		}
+	})
 	return slices.Clone(r.branches)
 }
 
