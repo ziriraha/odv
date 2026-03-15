@@ -10,12 +10,16 @@ import (
 
 type Config struct {
 	OdooHome     string            `toml:"odoo_home"`
+	DBPrefix     string            `toml:"db_prefix"`
+	OdooPort     int               `toml:"odoo_port"`
 	Repositories map[string]string `toml:"repositories"`
 }
 
 func getDefaultConfig() Config {
 	return Config{
 		OdooHome: "$ODOO_HOME",
+		DBPrefix: "rd-",
+		OdooPort: 8069,
 		Repositories: map[string]string{
 			".workspace": ".workspace",
 			"community":  "community",

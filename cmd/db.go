@@ -20,7 +20,7 @@ var dbDropCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		deleteAll, _ := cmd.Flags().GetBool("all")
 		if deleteAll {
-			prefix := "rd-"
+			prefix := lib.GetConfig().DBPrefix
 			if len(args) == 1 {
 				prefix = args[0]
 			}
@@ -42,7 +42,7 @@ var dbDropCmd = &cobra.Command{
 			}
 		} else {
 			if len(args) == 0 {
-				cmd.PrintErrln("Please provide a database name or prefix, or use --all to drop all databases.")
+				cmd.Help()
 				os.Exit(1)
 			}
 			dbname := args[0]
@@ -78,7 +78,7 @@ var dbListCmd = &cobra.Command{
 	Long:  "Lists all databases in PostgreSQL that start with 'rd-'.",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		prefix := "rd-"
+		prefix := lib.GetConfig().DBPrefix
 		if len(args) == 1 {
 			prefix = args[0]
 		}

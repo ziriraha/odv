@@ -18,9 +18,10 @@ var utilsCmd = &cobra.Command{
 }
 
 func findKillOdooProcess() error {
-	pid, err := exec.Command("lsof", "-ti", ":8069").CombinedOutput()
+	odooPort := lib.GetConfig().OdooPort
+	pid, err := exec.Command("lsof", "-ti", fmt.Sprintf(":%d", odooPort)).CombinedOutput()
 	if err != nil || len(pid) == 0 {
-		return fmt.Errorf("no process found listening on port 8069")
+		return fmt.Errorf("no process found listening on port %d", odooPort)
 	}
 	pidInt, err := strconv.Atoi(strings.TrimSpace(string(pid)))
 	if err != nil {
@@ -40,7 +41,7 @@ func findKillOdooProcess() error {
 var utilsKillOdooCmd = &cobra.Command{
 	Use:   "kill-odoo",
 	Short: "Find and kill the odoo process.",
-	Long:  "Finds the pid of the process listening on port 8069 (the default odoo port) and kills it.",
+	Long:  fmt.Sprintf("Finds the pid of the process listening on port %d and kills it.", lib.GetConfig().OdooPort),
 	Run: func(cmd *cobra.Command, args []string) {
 		err := findKillOdooProcess()
 		if err != nil {
