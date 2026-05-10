@@ -22,7 +22,7 @@ func getDefaultConfig() Config {
 		OdooPort: 8069,
 		Repositories: map[string]string{
 			".workspace": ".workspace",
-			"community":  "community",
+			"odoo":       "odoo",
 			"enterprise": "enterprise",
 			"upgrade":    "upgrade",
 		},

@@ -13,7 +13,7 @@ func GetRepoStyle(repoName string) lipgloss.Style {
 	switch repoName {
 	case ".workspace":
 		repoColor = "1" // Red
-	case "community":
+	case "odoo":
 		repoColor = "3" // Yellow
 	case "enterprise":
 		repoColor = "2" // Green

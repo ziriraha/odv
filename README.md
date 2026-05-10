@@ -19,7 +19,7 @@ odoo_port = 8069
 
 [repositories]
 .workspace = ".workspace"
-community  = "community"
+odoo       = "odoo"
 enterprise = "enterprise"
 upgrade    = "upgrade"
 ```
@@ -30,7 +30,7 @@ The `odoo_home` variable is the path to your Odoo installation. The `repositorie
 
 ### Git
 
-The git features assume that your Community, Enterprise, Upgrade and Workspace repositories are all in `odoo_home`. Pull only accepts version branches, while rebase doesn't accept them. Version branches are the base versions for development, such as master, saas-19.2, 18.0...
+The git features assume that your Odoo, Enterprise, Upgrade and Workspace repositories are all in `odoo_home`. Pull only accepts version branches, while rebase doesn't accept them. Version branches are the base versions for development, such as master, saas-19.2, 18.0...
 
 ### Database
 
