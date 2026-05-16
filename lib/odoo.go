@@ -3,7 +3,18 @@ package lib
 import (
 	"slices"
 	"strings"
+
+	"mvdan.cc/sh/v3/shell"
 )
+
+func runOdooCommand(args ...string) (string, error) {
+	odooCommandString := GetConfig().Odoo.Command
+	parts, err := shell.Fields(odooCommandString, nil)
+	if err != nil {
+		return "", err
+	}
+	return runCommand(parts[0], append(parts[1:], args...)...)
+}
 
 func DetectVersion(branch string) string {
 	if strings.HasPrefix(branch, "saas-") {

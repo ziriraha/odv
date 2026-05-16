@@ -8,17 +8,35 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
+type OdooConfig struct {
+	Path    string `toml:"path"`
+	Command string `toml:"command"`
+}
+
+type DBConfig struct {
+	DSN    string `toml:"dsn"`
+	Prefix string `toml:"prefix"`
+}
+
 type Config struct {
-	OdooHome     string            `toml:"odoo_home"`
-	DBPrefix     string            `toml:"db_prefix"`
-	OdooPort     int               `toml:"odoo_port"`
+	Odoo         OdooConfig        `toml:"odoo"`
+	Database     DBConfig          `toml:"db"`
+	OdooPort     uint              `toml:"odoo_port"`
 	Repositories map[string]string `toml:"repositories"`
 }
 
+const defaultDSN = "postgres://$PGUSER:$PGPASSWORD@$PGHOST:$PGPORT/postgres"
+
 func getDefaultConfig() Config {
 	return Config{
-		OdooHome: "$ODOO_HOME",
-		DBPrefix: "rd-",
+		Odoo: OdooConfig{
+			Path:    ".",
+			Command: "python3 ./odoo/odoo-bin",
+		},
+		Database: DBConfig{
+			DSN:    defaultDSN,
+			Prefix: "odoo",
+		},
 		OdooPort: 8069,
 		Repositories: map[string]string{
 			".workspace": ".workspace",
@@ -58,10 +76,8 @@ func GetConfig() *Config {
 			toml.Unmarshal(data, &cfg)
 		}
 
-		cfg.OdooHome = os.ExpandEnv(cfg.OdooHome)
-		if cfg.OdooHome == "" {
-			cfg.OdooHome = "."
-		}
+		cfg.Odoo.Path = os.ExpandEnv(cfg.Odoo.Path)
+		cfg.Database.DSN = os.ExpandEnv(cfg.Database.DSN)
 
 		userConfig = &cfg
 	})

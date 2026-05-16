@@ -13,61 +13,29 @@ var dbCmd = &cobra.Command{
 }
 
 var dbDropCmd = &cobra.Command{
-	Use:   "drop <dbname> | --all [prefix]",
-	Short: "Drops all R&D db's in PostgreSQL. Use with caution!",
-	Long:  "Drops databases in PSQL and Filestore. If no args are given with --all, it drops the 'rd-*' databases. If a prefix is given, it drops all databases starting with that prefix.",
+	Use:   "dropall",
+	Short: "Drops all Odoo db's. Use with caution!",
+	Long:  "Drops odoo databases using odoo's db drop utility.",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		deleteAll, _ := cmd.Flags().GetBool("all")
-		if deleteAll {
-			prefix := lib.GetConfig().DBPrefix
-			if len(args) == 1 {
-				prefix = args[0]
-			}
-			dbsToDelete, err := lib.ListDBs(prefix)
-			if err != nil {
-				cmd.PrintErrln("Failed to list databases:", err)
-				os.Exit(1)
-			}
-			for _, dbname := range dbsToDelete {
-				err := lib.DropDB(dbname)
-				if err != nil {
-					cmd.PrintErrf("Failed to drop database %s: %v\n", dbname, err)
-				} else {
-					cmd.Printf("Dropped database: %s\n", dbname)
-				}
-			}
-			if len(dbsToDelete) == 0 {
-				cmd.Printf("No databases found with prefix '%s'.\n", prefix)
-			}
-		} else {
-			if len(args) == 0 {
-				cmd.Help()
-				os.Exit(1)
-			}
-			dbname := args[0]
-			err := lib.DropDB(dbname)
-			if err != nil {
-				cmd.PrintErrf("Failed to drop database %s: %v\n", dbname, err)
-			}
+		prefix := lib.GetDefaultDBPrefix()
+		if len(args) == 1 {
+			prefix = args[0]
 		}
-	},
-}
-
-var dbDuplicateCmd = &cobra.Command{
-	Use:   "duplicate <source_db> <new_db>",
-	Short: "Duplicates an existing database.",
-	Long:  "Creates a new database by duplicating an existing one. The source database must exist, and the new database must not already exist.",
-	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
-		sourceDB := args[0]
-		newDB := args[1]
-		err := lib.DuplicateDB(sourceDB, newDB)
+		dbsToDelete, err := lib.ListDBs(prefix)
 		if err != nil {
-			cmd.PrintErrf("Failed to duplicate database from %s to %s: %v\n", sourceDB, newDB, err)
+			cmd.PrintErrln("Failed to list databases:", err)
 			os.Exit(1)
+		}
+		if len(dbsToDelete) == 0 {
+			cmd.Printf("No databases found with prefix '%s'.\n", prefix)
 		} else {
-			cmd.Printf("Successfully duplicated database from %s to %s\n", sourceDB, newDB)
+			err := lib.DropDBs(dbsToDelete...)
+			if err != nil {
+				cmd.PrintErrf("Failed to drop databases %s: %v\n", dbsToDelete, err)
+			} else {
+				cmd.Printf("Dropped databases: %s\n", dbsToDelete)
+			}
 		}
 	},
 }
@@ -78,7 +46,7 @@ var dbListCmd = &cobra.Command{
 	Long:  "Lists all databases in PostgreSQL that start with 'rd-'.",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		prefix := lib.GetConfig().DBPrefix
+		prefix := lib.GetDefaultDBPrefix()
 		if len(args) == 1 {
 			prefix = args[0]
 		}
@@ -101,7 +69,6 @@ func init() {
 	dbDropCmd.Flags().BoolP("all", "a", false, "Drop all databases")
 	dbCmd.AddCommand(dbDropCmd)
 
-	dbCmd.AddCommand(dbDuplicateCmd)
 	dbCmd.AddCommand(dbListCmd)
 
 	rootCmd.AddCommand(dbCmd)

@@ -17,6 +17,13 @@ odoo_home = "$ODOO_HOME"
 db_prefix = "rd-"
 odoo_port = 8069
 
+[db]
+user     = "odoo"
+password = "odoo"
+host     = "localhost"
+port     = 5432
+prefix   = "rd-"
+
 [repositories]
 .workspace = ".workspace"
 odoo       = "odoo"

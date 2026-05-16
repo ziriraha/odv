@@ -3,9 +3,12 @@ package lib
 import (
 	"fmt"
 	"maps"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -22,7 +25,7 @@ func GetRepositories() map[string]*Repository {
 		cfg := GetConfig()
 
 		for name, folderName := range cfg.Repositories {
-			fullPath := filepath.Join(cfg.OdooHome, folderName)
+			fullPath := filepath.Join(cfg.Odoo.Path, folderName)
 			repositories[name] = &Repository{path: fullPath}
 		}
 
