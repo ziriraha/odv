@@ -83,3 +83,27 @@ func runCommand(name string, args ...string) (string, error) {
 	}
 	return string(output), err
 }
+
+func KillProcessByPort(port int) error {
+	if port <= 0 || port > 65535 {
+		return fmt.Errorf("invalid port number: %d", port)
+	}
+
+	pid, err := exec.Command("lsof", "-ti", fmt.Sprintf(":%d", port)).CombinedOutput()
+	if err != nil || len(pid) == 0 {
+		return fmt.Errorf("no process found listening on port %d", port)
+	}
+	pidInt, err := strconv.Atoi(strings.TrimSpace(string(pid)))
+	if err != nil {
+		return fmt.Errorf("invalid pid: %v", err)
+	}
+	process, err := os.FindProcess(pidInt)
+	if err != nil {
+		return fmt.Errorf("could not find process: %v", err)
+	}
+	err = process.Kill()
+	if err != nil {
+		return fmt.Errorf("failed to kill process: %v", err)
+	}
+	return nil
+}

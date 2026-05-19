@@ -1,11 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
-	"os/exec"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/ziriraha/odv/lib"
@@ -17,38 +14,27 @@ var utilsCmd = &cobra.Command{
 	Short: "Utilities for managing odoo.",
 }
 
-func findKillOdooProcess() error {
-	odooPort := lib.GetConfig().OdooPort
-	pid, err := exec.Command("lsof", "-ti", fmt.Sprintf(":%d", odooPort)).CombinedOutput()
-	if err != nil || len(pid) == 0 {
-		return fmt.Errorf("no process found listening on port %d", odooPort)
-	}
-	pidInt, err := strconv.Atoi(strings.TrimSpace(string(pid)))
-	if err != nil {
-		return fmt.Errorf("invalid pid: %v", err)
-	}
-	process, err := os.FindProcess(pidInt)
-	if err != nil {
-		return fmt.Errorf("could not find process: %v", err)
-	}
-	err = process.Kill()
-	if err != nil {
-		return fmt.Errorf("failed to kill process: %v", err)
-	}
-	return nil
-}
-
-var utilsKillOdooCmd = &cobra.Command{
-	Use:   "kill-odoo",
-	Short: "Find and kill the odoo process.",
-	Long:  fmt.Sprintf("Finds the pid of the process listening on port %d and kills it.", lib.GetConfig().OdooPort),
+var utilsKillCmd = &cobra.Command{
+	Use:   "kill [port]",
+	Short: "Find and kill process by port (default 8069).",
+	Long:  "Finds the pid of the process listening on port (default 8069) and kills it.",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		err := findKillOdooProcess()
+		var err error
+		port := 8069
+		if len(args) == 1 {
+			port, err = strconv.Atoi(args[0])
+			if err != nil {
+				cmd.PrintErrln("Invalid port number:", err)
+				os.Exit(1)
+			}
+		}
+		err = lib.KillProcessByPort(port)
 		if err != nil {
-			cmd.PrintErrln("Failed to kill odoo process:", err)
+			cmd.PrintErrln("Failed to kill process:", err)
 			os.Exit(1)
 		}
-		cmd.Println("Odoo process killed successfully.")
+		cmd.Printf("Process running in %d killed successfully.\n", port)
 	},
 }
 
@@ -98,7 +84,7 @@ var utilsDeleteBranchCmd = &cobra.Command{
 }
 
 func init() {
-	utilsCmd.AddCommand(utilsKillOdooCmd)
+	utilsCmd.AddCommand(utilsKillCmd)
 	utilsCmd.AddCommand(utilsCleanBranchesCmd)
 	utilsCmd.AddCommand(utilsDeleteBranchCmd)
 

@@ -21,7 +21,6 @@ type DBConfig struct {
 type Config struct {
 	Odoo         OdooConfig        `toml:"odoo"`
 	Database     DBConfig          `toml:"db"`
-	OdooPort     uint              `toml:"odoo_port"`
 	Repositories map[string]string `toml:"repositories"`
 }
 
@@ -37,7 +36,6 @@ func getDefaultConfig() Config {
 			DSN:    defaultDSN,
 			Prefix: "odoo",
 		},
-		OdooPort: 8069,
 		Repositories: map[string]string{
 			".workspace": ".workspace",
 			"odoo":       "odoo",
