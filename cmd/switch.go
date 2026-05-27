@@ -36,6 +36,8 @@ func performSwitch(repoIndex int, repo *lib.Repository, state *views.RepoOperati
 	}
 }
 
+var switchExclude []string
+
 var switchCmd = &cobra.Command{
 	Use:   "switch [branch]",
 	Short: "Switch to an existing branch.",
@@ -75,6 +77,9 @@ var switchCmd = &cobra.Command{
 
 		repoBranches := make(map[string]string)
 		for repoName, repository := range lib.GetRepositories() {
+			if slices.Contains(switchExclude, repoName) {
+				continue
+			}
 			branchName := selectedBranch
 			if !repository.BranchExists(branchName) {
 				if repoName == ".workspace" {
@@ -95,21 +100,32 @@ var switchCmd = &cobra.Command{
 			repoBranches[repoName] = branchName
 		}
 
+		skipped := make(map[int]bool)
 		states := make([]*views.RepoOperationState, len(lib.GetSortedRepoNames()))
 		targetBranches := make([]string, len(lib.GetSortedRepoNames()))
 		for i, repoName := range lib.GetSortedRepoNames() {
 			s := views.NewRepoOperationState(repoName)
 			states[i] = &s
-			targetBranches[i] = repoBranches[repoName]
+			if slices.Contains(switchExclude, repoName) {
+				skipped[i] = true
+			} else {
+				targetBranches[i] = repoBranches[repoName]
+			}
 		}
 
 		failCount, err := views.RepoBranchSpinnerView{
-			Title:  "Switching branches",
-			States: states,
+			Title:          "Switching branches",
+			States:         states,
+			SkippedIndices: skipped,
 			LaunchOp: func(i int) tea.Cmd {
 				return performSwitch(i, lib.GetRepository(states[i].Name), states[i], targetBranches[i])
 			},
 			RenderRepo: func(i int, state *views.RepoOperationState) string {
+				if skipped[i] {
+					return fmt.Sprintf("%s %s - excluded\n",
+						views.FaintStyle.Render("⊘"),
+						views.RenderRepoName(state.Name))
+				}
 				tb := targetBranches[i]
 				switch state.Status {
 				case views.StatusInProgress:
@@ -134,5 +150,6 @@ var switchCmd = &cobra.Command{
 }
 
 func init() {
+	switchCmd.Flags().StringSliceP("exclude", "e", nil, "Exclude repo(s) by name, comma-separated (e.g. --exclude enterprise,odoo).")
 	rootCmd.AddCommand(switchCmd)
 }
