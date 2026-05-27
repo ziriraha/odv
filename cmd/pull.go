@@ -12,8 +12,8 @@ import (
 )
 
 type pullRepoExtra struct {
-	branch     string
-	skipReason string
+	remote string
+	branch string
 }
 
 func performPull(repoIndex int, repo *lib.Repository, extra *pullRepoExtra) tea.Cmd {
@@ -21,7 +21,7 @@ func performPull(repoIndex int, repo *lib.Repository, extra *pullRepoExtra) tea.
 		startTime := time.Now()
 		return views.RepoOperationDoneMsg{
 			RepoIndex: repoIndex,
-			Err:       repo.PullRebase(lib.GetRemoteForBranch(extra.branch), extra.branch),
+			Err:       repo.PullRebase(extra.remote, extra.branch),
 			Duration:  time.Since(startTime),
 		}
 	}
@@ -35,7 +35,6 @@ var pullCmd = &cobra.Command{
 		var states []*views.RepoOperationState
 		var extras []*pullRepoExtra
 		var repoNames []string
-		skipped := make(map[int]bool)
 
 		for _, repoName := range lib.GetSortedRepoNames() {
 			if repoName == ".workspace" {
@@ -45,39 +44,26 @@ var pullCmd = &cobra.Command{
 			curBranch := repository.GetCurrentBranch()
 			s := views.NewRepoOperationState(repoName)
 
-			extra := &pullRepoExtra{branch: curBranch}
-			idx := len(states)
-
-			if !lib.IsVersionBranch(curBranch) {
-				extra.skipReason = "not on version branch"
-				skipped[idx] = true
+			remote := lib.GetRemoteForBranch(curBranch)
+			if repoName == "upgrade" {
+				remote = lib.RemoteOrigin
 			}
+
+			extra := &pullRepoExtra{remote: remote, branch: curBranch}
 
 			states = append(states, &s)
 			extras = append(extras, extra)
 			repoNames = append(repoNames, repoName)
 		}
 
-		if len(states)-len(skipped) == 0 {
-			cmd.Println("No repositories on version branches to pull.")
-			return
-		}
-
 		failCount, err := views.RepoBranchSpinnerView{
-			Title:          "Pulling branches",
-			States:         states,
-			SkippedIndices: skipped,
+			Title:  "Pulling branches",
+			States: states,
 			LaunchOp: func(i int) tea.Cmd {
 				return performPull(i, lib.GetRepository(states[i].Name), extras[i])
 			},
 			RenderRepo: func(i int, state *views.RepoOperationState) string {
 				extra := extras[i]
-				if skipped[i] {
-					return fmt.Sprintf("%s %s - skipped (%s)\n",
-						views.FaintStyle.Render("⊘"),
-						views.RenderRepoName(state.Name),
-						views.FaintStyle.Render(extra.skipReason))
-				}
 				switch state.Status {
 				case views.StatusInProgress:
 					return state.RenderInProgress(fmt.Sprintf("pulling '%s'", extra.branch))
