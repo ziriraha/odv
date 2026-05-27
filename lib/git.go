@@ -119,6 +119,14 @@ func (r *Repository) FetchRefspec(remote, branch string) error {
 	return r.writeCommand("fetch", remote, fmt.Sprintf("%s:%s", branch, branch))
 }
 
+func (r *Repository) Push(remote, branch string, forceWithLease bool) error {
+	args := []string{"push", remote, branch}
+	if forceWithLease {
+		args = append(args, "--force-with-lease")
+	}
+	return r.writeCommand(args...)
+}
+
 func (r *Repository) CommitAll(message string) error {
 	return r.writeCommand("commit", "--all", "-m", message)
 }
