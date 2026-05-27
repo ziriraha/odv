@@ -1,8 +1,10 @@
 package lib
 
 import (
+	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	"mvdan.cc/sh/v3/shell"
 )
@@ -52,4 +54,13 @@ func SortBranches(branches []string) {
 		}
 		return strings.Compare(a, b)
 	})
+}
+
+func (r *Repository) AutoCommit(message string) error {
+	changes, err := r.GetStatus()
+	if err == nil && len(changes) > 0 {
+		commitMessage := fmt.Sprintf("odv auto-commit %v\n\n%s", time.Now().Format(time.RFC3339), message)
+		return r.CommitAll(commitMessage)
+	}
+	return err
 }

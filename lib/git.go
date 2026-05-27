@@ -59,7 +59,7 @@ func (r *Repository) SwitchBranch(branchName string) error {
 }
 
 func (r *Repository) CreateBranchFrom(baseBranch, newBranch string) error {
-	err := r.writeCommand("switch", "-c", newBranch, baseBranch)
+	err := r.writeCommand("branch", newBranch, baseBranch)
 	if err == nil {
 		r.getBranchesOnce = sync.Once{} // reset so branches will be reloaded on next GetBranches call
 	}
@@ -120,9 +120,5 @@ func (r *Repository) FetchRefspec(remote, branch string) error {
 }
 
 func (r *Repository) CommitAll(message string) error {
-	err := r.writeCommand("add", ".")
-	if err != nil {
-		return err
-	}
-	return r.writeCommand("commit", "-m", message)
+	return r.writeCommand("commit", "--all", "-m", message)
 }

@@ -18,15 +18,12 @@ func performSwitch(repoIndex int, repo *lib.Repository, state *views.RepoOperati
 		startTime := time.Now()
 
 		if state.Name == ".workspace" {
-			changes, err := repo.GetStatus()
-			if err == nil && len(changes) > 0 {
-				commitMessage := fmt.Sprintf("odv auto-commit %v\n\nBefore switching to '%s'", time.Now().Format(time.RFC3339), targetBranch)
-				if err := repo.CommitAll(commitMessage); err != nil {
-					return views.RepoOperationDoneMsg{
-						RepoIndex: repoIndex,
-						Err:       fmt.Errorf("auto-commit failed before switch: %w", err),
-						Duration:  time.Since(startTime),
-					}
+			err := repo.AutoCommit(fmt.Sprintf("Before switching to '%s'", targetBranch))
+			if err != nil {
+				return views.RepoOperationDoneMsg{
+					RepoIndex: repoIndex,
+					Err:       fmt.Errorf("auto-commit failed before switch: %w", err),
+					Duration:  time.Since(startTime),
 				}
 			}
 		}
